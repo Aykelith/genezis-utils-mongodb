@@ -1,4 +1,4 @@
-import { createGenerateOptions, stringChecker, integerChecker, booleanChecker, defaultChecker, requiredChecker } from "genezis/Config";
+import { createGenerateOptions, stringChecker, integerChecker, booleanChecker, defaultChecker, requiredChecker } from "genezis/Checker";
 import { ObjectID as MongoID, Int32 as MongoInt32 } from "mongodb";
 import ConfigError from "genezis/ConfigError";
 

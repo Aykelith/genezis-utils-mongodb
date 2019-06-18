@@ -5,7 +5,7 @@ import createRequest, { GenezisRulesConfig as BaseRequestGenezisConfig } from "g
 
 import { Collection as MongoDBCollection } from "mongodb";
 
-import GenezisConfig from "genezis/Config";
+import GenezisChecker from "genezis/Checker";
 import ConfigError from "genezis/ConfigError";
 
 import createSearchAggregate from "./createSearchAggregate";
@@ -52,9 +52,9 @@ import numberOfObjectsWithProperty from "genezis/utils/numberOfObjectsWithProper
 
 const VariableTypes = {
     MongoID: (settings) => {
-        GenezisConfig(settings, {
-            errorCode: GenezisConfig.integer().default(400),
-            errorMessage: GenezisConfig.string().required()
+        GenezisChecker(settings, {
+            errorCode: GenezisChecker.integer().default(400),
+            errorMessage: GenezisChecker.string().required()
         });
 
         return (x) => {
@@ -168,19 +168,19 @@ export async function constructQueryFromArrayOfVariables(array, data, messageOnN
 
 /**
  * @name CollectionGenezisConfig
- * @GenezisConfig
+ * @GenezisChecker
  * @exports CollectionGenezisConfig
  * 
- * @description The GenezisConfig for the collection
+ * @description The GenezisChecker for the collection
  */
-export const CollectionGenezisConfig = GenezisConfig.or([
-    GenezisConfig.instanceOf(MongoDBCollection),
-    GenezisConfig.function()
+export const CollectionGenezisConfig = GenezisChecker.or([
+    GenezisChecker.instanceOf(MongoDBCollection),
+    GenezisChecker.function()
 ]);
 
-export const MessageGenezisConfig = GenezisConfig.or([
-    GenezisConfig.string(),
-    GenezisConfig.function()
+export const MessageGenezisConfig = GenezisChecker.or([
+    GenezisChecker.string(),
+    GenezisChecker.function()
 ])
 
 /**
@@ -192,9 +192,9 @@ export const MessageGenezisConfig = GenezisConfig.or([
 /**
  * @function
  * @internal
- * @description Generate the base GenezisConfig for each request
+ * @description Generate the base GenezisChecker for each request
  * 
- * @returns {GenezisConfig}
+ * @returns {GenezisChecker}
  */
 function getBaseGenezisConfig() {
     return {
@@ -205,17 +205,17 @@ function getBaseGenezisConfig() {
 
 /**
  * @name MongoDBRequestFieldsGenezisConfig
- * @type {GenezisConfig} 
+ * @type {GenezisChecker} 
  */
-const MongoDBRequestFieldsGenezisConfig = GenezisConfig.array({
-    of: GenezisConfig.array({
-        of: GenezisConfig.object({
+const MongoDBRequestFieldsGenezisConfig = GenezisChecker.array({
+    of: GenezisChecker.array({
+        of: GenezisChecker.object({
             shape: {
-                input: GenezisConfig.string(),
-                constValue: GenezisConfig.any(),
-                field: GenezisConfig.required().string(),
-                convertFunc: GenezisConfig.function(),
-                ___: GenezisConfig.onlyOneAvailable(["input", "constValue"], { throwOnAllMissing: true })
+                input: GenezisChecker.string(),
+                constValue: GenezisChecker.any(),
+                field: GenezisChecker.required().string(),
+                convertFunc: GenezisChecker.function(),
+                ___: GenezisChecker.onlyOneAvailable(["input", "constValue"], { throwOnAllMissing: true })
             }
         })
     })
@@ -223,11 +223,11 @@ const MongoDBRequestFieldsGenezisConfig = GenezisConfig.array({
 
 export const SingleGetterConfig = {
     ...getBaseGenezisConfig(),
-    onEmptyResponse: GenezisConfig.array({
-        of: GenezisConfig.function()
+    onEmptyResponse: GenezisChecker.array({
+        of: GenezisChecker.function()
     }),
     getBy: MongoDBRequestFieldsGenezisConfig.required(),
-    userProjectionAllowed: GenezisConfig.boolean().default(false),
+    userProjectionAllowed: GenezisChecker.boolean().default(false),
     messageOnNoOptions: MessageGenezisConfig.default("Default message for messageOnNoOptions"),
     messageOnUserProjectionError: MessageGenezisConfig.default("Default message for messageOnUserProjectionError")
 };
@@ -239,7 +239,7 @@ export const SingleGetterConfig = {
  * @exports createSingleGetter
  * @genezis genezis-utils-router
  * 
- * @param {GenezisConfig}          settings The settings for the request
+ * @param {GenezisChecker}          settings The settings for the request
  * @param {MongoDBRequestFields[]} settings.getBy The possible fields to get by the document. The order of them matters
  * @param {RequestFunction[]}      settings.onEmptyResponse An array of functions to be called when the answer from the query is empty
  * @param {Boolean}                settings.userProjectionAllowed Allow the user to set the fields to receive
@@ -249,10 +249,10 @@ export const SingleGetterConfig = {
  * @combineWith "genezis-utils-router/createRequest.js:GenezisRulesConfigParams"
  * 
  * @returns {RequestFunction}
- * @throws {GenezisConfig} If the configuration is wrong
+ * @throws {GenezisChecker} If the configuration is wrong
  */
 export function createSingleGetter(settings) {
-    GenezisConfig(settings, SingleGetterConfig);
+    GenezisChecker(settings, SingleGetterConfig);
 
     let onEmptyResponseStopAfter = checkOnEmptyResponseArray(settings.onEmptyResponse);
 
@@ -292,8 +292,8 @@ export function createSingleGetter(settings) {
 
 export const MultipleGetterConfig = {
     ...getBaseGenezisConfig(),
-    onEmptyResponse: GenezisConfig.array({
-        of: GenezisConfig.function()
+    onEmptyResponse: GenezisChecker.array({
+        of: GenezisChecker.function()
     })
 };
 
@@ -304,16 +304,16 @@ export const MultipleGetterConfig = {
  * @exports createMultipleGetter
  * @genezis genezis-utils-router
  * 
- * @param {GenezisConfig}          settings The settings for the request
+ * @param {GenezisChecker}          settings The settings for the request
  * @param {RequestFunction[]}      settings.onEmptyResponse An array of functions to be called when the answer from the query is empty
  * @combineWith ":BaseGenezisConfigParams"
  * @combineWith "genezis-utils-router/createRequest.js:GenezisRulesConfigParams"
  * 
  * @returns {RequestFunction}
- * @throws {GenezisConfig} If the configuration is wrong
+ * @throws {GenezisChecker} If the configuration is wrong
  */
 export function createMultipleGetter(settings) {
-    GenezisConfig(settings, MultipleGetterConfig);
+    GenezisChecker(settings, MultipleGetterConfig);
 
     let onEmptyResponseStopAfter = checkOnEmptyResponseArray(settings.onEmptyResponse);
 
@@ -343,19 +343,19 @@ export function createMultipleGetter(settings) {
 
 export const SingleSetterConfig = {
     ...getBaseGenezisConfig(),
-    checker: GenezisConfig.required().function(),
+    checker: GenezisChecker.required().function(),
     updateBy: MongoDBRequestFieldsGenezisConfig,
     messageOnNoOptions: MessageGenezisConfig.default("Default message for messageOnNoOptions"),
     messageOnNoModifiedDoc: MessageGenezisConfig.default("Default message for messageOnNoModifiedDoc"),
     messageOnNoUserModifiedEntry: MessageGenezisConfig.default("Default message for messageOnNoUserModifiedEntry"),
     messageOnNoUserFindEntry: MessageGenezisConfig.default("Default message for messageOnNoUserFindEntry"),
     messageOnInternalError: MessageGenezisConfig.default("Default message for messageOnInternalError"),
-    createErrorMessageForChecker: GenezisConfig.string().default((req, error) => `Checker failed for ${error.property} (default message for createErrorMessageForChecker)`),
-    modifiedFieldName: GenezisConfig.string().default("modified"),
-    findFieldName: GenezisConfig.string().default("find"),
-    returnTheUpdatedDoc: GenezisConfig.boolean().default(false),
-    acceptEmptyUserInput: GenezisConfig.boolean().default(false),
-    updateQuery: GenezisConfig.or([ GenezisConfig.object(), GenezisConfig.function() ])
+    createErrorMessageForChecker: GenezisChecker.string().default((req, error) => `Checker failed for ${error.property} (default message for createErrorMessageForChecker)`),
+    modifiedFieldName: GenezisChecker.string().default("modified"),
+    findFieldName: GenezisChecker.string().default("find"),
+    returnTheUpdatedDoc: GenezisChecker.boolean().default(false),
+    acceptEmptyUserInput: GenezisChecker.boolean().default(false),
+    updateQuery: GenezisChecker.or([ GenezisChecker.object(), GenezisChecker.function() ])
 };
 
 /**
@@ -364,7 +364,7 @@ export const SingleSetterConfig = {
  * @exports createSingleSetter
  * @genezis genezis-utils-router
  * 
- * @param {GenezisConfig}          settings The settings for the request
+ * @param {GenezisChecker}          settings The settings for the request
  * @param {MongoDBRequestFields[]} settings.updateBy The possible fields to find the document to edit. The order of them matters
  * @param {String}                 settings.messageOnNoOptions The message displayed when no options is available for the given user data
  * @param {String}                 settings.messageOnNoModifiedDoc The message displayed when no document is modified
@@ -378,10 +378,10 @@ export const SingleSetterConfig = {
  * @combineWith "genezis-utils-router/createRequest.js:GenezisRulesConfigParams"
  * 
  * @returns {RequestFunction}
- * @throws {GenezisConfig} If the configuration is wrong
+ * @throws {GenezisChecker} If the configuration is wrong
  */
 export function createSingleSetter(settings) {
-    GenezisConfig(settings, SingleSetterConfig);
+    GenezisChecker(settings, SingleSetterConfig);
 
     return createRequest(settings, async (req, data, onSuccess) => {
         if (!data[settings.modifiedFieldName]) throw new RequestError(400, await getMessage(settings.messageOnNoUserModifiedEntry));
@@ -426,12 +426,12 @@ export function createSingleSetter(settings) {
 
 export const SingleAdderConfig = {
     ...getBaseGenezisConfig(),
-    checker: GenezisConfig.required().function(),
+    checker: GenezisChecker.required().function(),
     messageOnNoModifiedDoc: MessageGenezisConfig.default("Default message for messageOnNoModifiedDoc"),
-    createErrorMessageForChecker: GenezisConfig.string().default((req, error) => `Checker failed for ${error.property} (default message for createErrorMessageForChecker)`),
-    returnTheIDOfNewDoc: GenezisConfig.boolean().default(false),
-    returnTheNewDoc: GenezisConfig.boolean().default(false),
-    ___: GenezisConfig.onlyOneAvailable(["returnTheIDOfNewDoc", "returnTheNewDoc"])
+    createErrorMessageForChecker: GenezisChecker.string().default((req, error) => `Checker failed for ${error.property} (default message for createErrorMessageForChecker)`),
+    returnTheIDOfNewDoc: GenezisChecker.boolean().default(false),
+    returnTheNewDoc: GenezisChecker.boolean().default(false),
+    ___: GenezisChecker.onlyOneAvailable(["returnTheIDOfNewDoc", "returnTheNewDoc"])
 };
 
 /**
@@ -440,16 +440,16 @@ export const SingleAdderConfig = {
  * @exports createSingleAdder
  * @genezis genezis-utils-router
  * 
- * @param {GenezisConfig} settings The settings for the request
+ * @param {GenezisChecker} settings The settings for the request
  * @param {Function}               settings.createErrorMessageForChecker
  * @combineWith ":BaseGenezisConfigParams"
  * @combineWith "genezis-utils-router/createRequest.js:GenezisRulesConfigParams"
  * 
  * @returns {RequestFunction}
- * @throws {GenezisConfig} If the configuration is wrong
+ * @throws {GenezisChecker} If the configuration is wrong
  */
 export function createSingleAdder(settings) {
-    GenezisConfig(settings, SingleAdderConfig);
+    GenezisChecker(settings, SingleAdderConfig);
 
     return createRequest(settings, async (req, data, onSuccess) => {
         if (!data) throw new RequestError(400, await getMessage(settings.messageOnNoUserAddEntry));
