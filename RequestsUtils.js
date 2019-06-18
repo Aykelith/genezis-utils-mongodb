@@ -6,7 +6,7 @@ import createRequest, { GenezisRulesConfig as BaseRequestGenezisConfig } from "g
 import { Collection as MongoDBCollection } from "mongodb";
 
 import GenezisChecker from "genezis/Checker";
-import ConfigError from "genezis/ConfigError";
+import CheckerError from "genezis/CheckerError";
 
 import createSearchAggregate from "./createSearchAggregate";
 
@@ -105,7 +105,7 @@ const OnEmptyResponseStopAfterProperty = "stopAfter";
  * @param {RequestFunction[]} array The array of functions to search for `[OnEmptyResponseStopAfterProperty]`
  * 
  * @returns {Number} the number of times
- * @throws {GenezisConfigError} if the property appears multiple time with `true` value 
+ * @throws {GenezisCheckerError} if the property appears multiple time with `true` value 
  */
 function checkOnEmptyResponseArray(array) {
     let stopAfter = false;
@@ -113,7 +113,7 @@ function checkOnEmptyResponseArray(array) {
     if (array) {
         let numberOfFunctionsWithStopAfter = numberOfObjectsWithProperty(array, OnEmptyResponseStopAfterProperty, true);
         if (numberOfFunctionsWithStopAfter > 1) {
-            throw new GenezisConfigError();
+            throw new GenezisCheckerError();
         } else if (numberOfFunctionsWithStopAfter) {
             stopAfter = true;
         }
@@ -394,7 +394,7 @@ export function createSingleSetter(settings) {
             docData = await settings.checker(req, data[settings.modifiedFieldName], data);
         } catch (error) {
             console.log("Error from checker:", error);
-            if (error instanceof ConfigError) {
+            if (error instanceof CheckerError) {
                 throw new RequestError(400, await settings.createErrorMessageForChecker(req, error));
             } else if (error instanceof RequestError) {
                 throw error;
@@ -458,9 +458,9 @@ export function createSingleAdder(settings) {
         try {
             doc = await settings.checker(req, data);
         } catch (error) {
-            console.log("Is Error instanceof ConfigError:", error instanceof ConfigError);
-            console.log("Is Error instanceof ConfigError:", error instanceof RequestError);
-            if (error instanceof ConfigError) {
+            console.log("Is Error instanceof CheckerError:", error instanceof CheckerError);
+            console.log("Is Error instanceof CheckerError:", error instanceof RequestError);
+            if (error instanceof CheckerError) {
                 throw new RequestError(400, await settings.createErrorMessageForChecker(req, error));
             } else if (error instanceof RequestError) {
                 throw error;

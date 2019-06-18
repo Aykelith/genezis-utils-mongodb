@@ -1,13 +1,13 @@
 import { createGenerateOptions, stringChecker, integerChecker, booleanChecker, defaultChecker, requiredChecker } from "genezis/Checker";
 import { ObjectID as MongoID, Int32 as MongoInt32 } from "mongodb";
-import ConfigError from "genezis/ConfigError";
+import CheckerError from "genezis/CheckerError";
 
 let generateOptions = createGenerateOptions((generateOptions, previousChecks) => { return {
     id: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document) => {
         if (data === undefined) return;
-        if (!MongoID.isValid(data)) throw new ConfigError(`The property "${property}" with data "${data}" is not a valid MongoID`, property, data);
+        if (!MongoID.isValid(data)) throw new CheckerError(`The property "${property}" with data "${data}" is not a valid MongoID`, property, data);
         if (!settings.convert && !(data instanceof MongoID)) {
-            throw new ConfigError("5", property, data);
+            throw new CheckerError("5", property, data);
         }
 
         if (document) document[field] = MongoID(data);
@@ -20,10 +20,10 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
             if (settings.convert) {
                 let converted = Number.parseInt(data);
 
-                if (Number.isNaN(converted)) throw new ConfigError(`The property "${property}" with value "${data}" must be a number`, property, data);
+                if (Number.isNaN(converted)) throw new CheckerError(`The property "${property}" with value "${data}" must be a number`, property, data);
                 if (document) document[field] = MongoInt32(converted);
             } else {
-                throw new ConfigError(`The property "${property}" with value "${data}" must be an integer`, property, data);
+                throw new CheckerError(`The property "${property}" with value "${data}" must be an integer`, property, data);
             }
         }
 
@@ -38,10 +38,10 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
         if (resultDoc) {
             if (runtimeSettings[property] && runtimeSettings[property].ignoreDocumentsWithIDs) {
                 for (let i=0, length=runtimeSettings[property].ignoreDocumentsWithIDs.length; i < length; ++i) {
-                    if (resultDoc._id.equals(runtimeSettings[property].ignoreDocumentsWithIDs)) throw new ConfigError("", property, data);
+                    if (resultDoc._id.equals(runtimeSettings[property].ignoreDocumentsWithIDs)) throw new CheckerError("", property, data);
                 }
             } else {
-                throw new ConfigError("4", property, data);
+                throw new CheckerError("4", property, data);
             }
         }
     }])),
@@ -53,10 +53,11 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
     }])),
     object: (settings = {}) => generateOptions(previousChecks.concat([(property, value, config, field, document, collection, runtimeSettings) => {
         if (value === undefined) return;
-        if (typeof value !== "object" || Array.isArray(value)) throw new ConfigError(`The property "${property}" with value "${value}" must be an object`, property, value);
+        if (typeof value !== "object" || Array.isArray(value)) throw new CheckerError(`The property "${property}" with value "${value}" must be an object`, property, value);
 
         if (settings.keysOf) {
             Object.keys(value).forEach(key => {
+                console.log("EE", key);
                 settings.keysOf._.forEach(checker => checker(
                     key,
                     key,
@@ -126,7 +127,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
     }])),
     array: (settings = {}) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (data === undefined) return;
-        if (!Array.isArray(data)) throw new ConfigError(`The property "${property}" with value "${data}" must be an array`, property, data);
+        if (!Array.isArray(data)) throw new CheckerError(`The property "${property}" with value "${data}" must be an array`, property, data);
 
         if (settings.onCopies) {
             let arrayWithoutCopies = [];
@@ -136,12 +137,12 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                     if (isUniqueFunc(child, arrayWithoutCopies)) arrayWithoutCopies.push(child);
                     else {
                         if (!settings.onCopies.delete) {
-                            throw new ConfigError("1", property, data);
+                            throw new CheckerError("1", property, data);
                         }
                     }
                 })
             } else if (!settings.onCopies.checkAfter) {
-                throw new ConfigError("2", property, data);
+                throw new CheckerError("2", property, data);
             }
 
             data = arrayWithoutCopies;
@@ -151,7 +152,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
             const isFromArrayFunc = settings.valuesIsFromArrayFunc || ((e, valuesFrom) => valuesFrom.includes(e)); 
             data.forEach((child, index) => {
                 if (!isFromArrayFunc(child, settings.valuesFrom)) {
-                    throw new ConfigError("3", `${property}[${index}]`, child);
+                    throw new CheckerError("3", `${property}[${index}]`, child);
                 }
             })    
         }
@@ -167,7 +168,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
         }
 
         if (settings.fixedLength) {
-            if (document.length != settings.fixedLength) throw new ConfigError(`The property "${property}" has fixedLengh=${settings.fixedLength} but the size of array is ${document.length}`, property, data);
+            if (document.length != settings.fixedLength) throw new CheckerError(`The property "${property}" has fixedLengh=${settings.fixedLength} but the size of array is ${document.length}`, property, data);
         }
     }]))
 }});
