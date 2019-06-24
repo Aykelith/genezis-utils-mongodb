@@ -1,4 +1,4 @@
-import { createGenerateOptions, stringChecker, integerChecker, booleanChecker, defaultChecker, requiredChecker } from "genezis/Checker";
+import { createGenerateOptions, stringChecker, integerChecker, booleanChecker, requiredChecker, numberChecker } from "genezis/Checker";
 import { ObjectID as MongoID, Int32 as MongoInt32 } from "mongodb";
 import CheckerError from "genezis/CheckerError";
 
@@ -29,10 +29,17 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
 
         if (document) document[field] = MongoInt32(data);
     }])),
+    float: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
+        if (config[property] !== undefined) {
+            const value = numberChecker(settings)(property, data, config, runtimeSettings);
+            if (document) document[field] = value;
+        }
+    }])),
     unique: (settings) => generateOptions(previousChecks.concat([async (property, data, config, field, document, collection, runtimeSettings) => {
         if (runtimeSettings.__ignoreUnique) return;
 
         if (data === undefined) return;
+        if (!collection) throw new Error("No collection given");
         
         let resultDoc = await collection.findOne({ [field]: data }, { $projection: { _id: 1 } });
         if (resultDoc) {
@@ -57,7 +64,6 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
 
         if (settings.keysOf) {
             Object.keys(value).forEach(key => {
-                console.log("EE", key);
                 settings.keysOf._.forEach(checker => checker(
                     key,
                     key,
@@ -67,10 +73,11 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                     null,
                     runtimeSettings
                 ));
-            })
+            });
         }
 
-        if (settings.valueOf) {
+        if (settings.hasOwnProperty("valueOf")) {
+            console.log(property, settings.valueOf, Object.keys(settings));
             Object.keys(value).forEach(key => {
                 settings.valueOf._.forEach(checker => checker(
                     key, 
@@ -81,7 +88,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                     collection,
                     runtimeSettings
                 ));
-            })
+            });
         }
 
         document[field] = {};
@@ -97,7 +104,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                     collection,
                     runtimeSettings
                 ));
-            })
+            });
         } else {
             document[field] = value;
         }
@@ -105,20 +112,21 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
     integer: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (config[property] !== undefined) {
             const value = integerChecker(settings)(property, data, config, runtimeSettings);
-            if (document) document[field] = value;
+            if (document != null) document[field] = value;
         }
     }])),
     boolean: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (config[property]) {
             const value = booleanChecker(settings)(property, data, config, runtimeSettings);
-            if (document) document[field] = value;
+            if (document != null) document[field] = value;
         }
     }])),
     default: (defaultValue) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (runtimeSettings.___ignoreDefault) return;
 
-        const value = defaultChecker(defaultValue)(property, data, config, runtimeSettings);
-        if (value !== undefined && document) document[field] = value;
+        if (data === undefined) {
+            document[field] = defaultValue;
+        }
     }])),
     required: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (runtimeSettings.___ignoreRequired) return;
@@ -154,7 +162,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                 if (!isFromArrayFunc(child, settings.valuesFrom)) {
                     throw new CheckerError("3", `${property}[${index}]`, child);
                 }
-            })    
+            }); 
         }
     
         document[field] = [];
@@ -176,7 +184,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
 let docMaker = async (config, configSettings, collection, runtimeSettings) => {
     if (!config) throw new Error("No config given");
     if (!configSettings) throw new Error("No configSettings given");
-    if (!collection) throw new Error("No collection given");
+    // if (!collection) throw new Error("No collection given");
 
     let document = {};
 
@@ -185,6 +193,21 @@ let docMaker = async (config, configSettings, collection, runtimeSettings) => {
     runtimeSettings.doNotModify = true;
 
     let promises = Object.keys(configSettings).map(property => {
+        if (property == "__") {
+            return Promise.all(configSettings[property]._.map(checker => checker(
+                null, 
+                null, 
+                config, 
+                null, 
+                document, 
+                collection, 
+                runtimeSettings
+            )));
+        }
+
+        if (!configSettings[property].type) throw new Error();
+        if (!configSettings[property].field) throw new Error();
+
         return Promise.all(configSettings[property].type._.map(checker => checker(
             property, 
             config[property], 

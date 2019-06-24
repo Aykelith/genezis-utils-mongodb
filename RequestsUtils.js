@@ -53,9 +53,11 @@ import numberOfObjectsWithProperty from "genezis/utils/numberOfObjectsWithProper
 const VariableTypes = {
     MongoID: (settings) => {
         GenezisChecker(settings, {
-            errorCode: GenezisChecker.integer().default(400),
+            errorCode: GenezisChecker.integer(),
             errorMessage: GenezisChecker.string().required()
         });
+
+        if (!settings.errorCode) settings.errorCode = 400;
 
         return (x) => {
             if (!MongoID.isValid(x)) throw new RequestError(settings.errorCode, settings.errorMessage);
@@ -86,8 +88,8 @@ async function getMessage(message, req) {
  * @param {MongoDB.Collection | CollectionRetrieverFunction} collection The collection given in the settings
  * @param {Request} req The request object
  */
-export async function getCollection(collection, req) {
-    if (typeof collection == "function") return await collection(req);
+export async function getCollection(collection, req, data) {
+    if (typeof collection == "function") return await collection(req, data);
     return collection;
 }
 
@@ -227,9 +229,9 @@ export const SingleGetterConfig = {
         of: GenezisChecker.function()
     }),
     getBy: MongoDBRequestFieldsGenezisConfig.required(),
-    userProjectionAllowed: GenezisChecker.boolean().default(false),
-    messageOnNoOptions: MessageGenezisConfig.default("Default message for messageOnNoOptions"),
-    messageOnUserProjectionError: MessageGenezisConfig.default("Default message for messageOnUserProjectionError")
+    userProjectionAllowed: GenezisChecker.boolean(),
+    messageOnNoOptions: MessageGenezisConfig,
+    messageOnUserProjectionError: MessageGenezisConfig
 };
 
 /**
@@ -254,6 +256,10 @@ export const SingleGetterConfig = {
 export function createSingleGetter(settings) {
     GenezisChecker(settings, SingleGetterConfig);
 
+    if (!settings.userProjectionAllowed) settings.userProjectionAllowed = false;
+    if (!settings.messageOnNoOptions) settings.messageOnNoOptions = "Default message for messageOnNoOptions";
+    if (!settings.messageOnUserProjectionError) settings.messageOnUserProjectionError = "Default message for messageOnUserProjectionError";
+
     let onEmptyResponseStopAfter = checkOnEmptyResponseArray(settings.onEmptyResponse);
 
     return createRequest(settings, async (req, data, onSuccess) => {
@@ -271,7 +277,7 @@ export function createSingleGetter(settings) {
 
         let findOneData = await constructQueryFromArrayOfVariables(settings.getBy, data, await getMessage(settings.messageOnNoOptions));
 
-        const collection = await getCollection(settings.collection, req);
+        const collection = await getCollection(settings.collection, req, data);
 
         try {
             const doc = await collection.findOne(findOneData, findOneSettings);
@@ -320,7 +326,7 @@ export function createMultipleGetter(settings) {
     return createRequest(settings, async (req, data, onSuccess) => {
         let searchObject = createSearchAggregate(data);
 
-        const collection = await getCollection(settings.collection, req);
+        const collection = await getCollection(settings.collection, req, data);
 
         try {
             const cursor = collection.aggregate(searchObject);
@@ -345,16 +351,16 @@ export const SingleSetterConfig = {
     ...getBaseGenezisConfig(),
     checker: GenezisChecker.required().function(),
     updateBy: MongoDBRequestFieldsGenezisConfig,
-    messageOnNoOptions: MessageGenezisConfig.default("Default message for messageOnNoOptions"),
-    messageOnNoModifiedDoc: MessageGenezisConfig.default("Default message for messageOnNoModifiedDoc"),
-    messageOnNoUserModifiedEntry: MessageGenezisConfig.default("Default message for messageOnNoUserModifiedEntry"),
-    messageOnNoUserFindEntry: MessageGenezisConfig.default("Default message for messageOnNoUserFindEntry"),
-    messageOnInternalError: MessageGenezisConfig.default("Default message for messageOnInternalError"),
-    createErrorMessageForChecker: GenezisChecker.string().default((req, error) => `Checker failed for ${error.property} (default message for createErrorMessageForChecker)`),
-    modifiedFieldName: GenezisChecker.string().default("modified"),
-    findFieldName: GenezisChecker.string().default("find"),
-    returnTheUpdatedDoc: GenezisChecker.boolean().default(false),
-    acceptEmptyUserInput: GenezisChecker.boolean().default(false),
+    messageOnNoOptions: MessageGenezisConfig,
+    messageOnNoModifiedDoc: MessageGenezisConfig,
+    messageOnNoUserModifiedEntry: MessageGenezisConfig,
+    messageOnNoUserFindEntry: MessageGenezisConfig,
+    messageOnInternalError: MessageGenezisConfig,
+    createErrorMessageForChecker: GenezisChecker.function(),
+    modifiedFieldName: GenezisChecker.string(),
+    findFieldName: GenezisChecker.string(),
+    returnTheUpdatedDoc: GenezisChecker.boolean(),
+    acceptEmptyUserInput: GenezisChecker.boolean(),
     updateQuery: GenezisChecker.or([ GenezisChecker.object(), GenezisChecker.function() ])
 };
 
@@ -383,6 +389,17 @@ export const SingleSetterConfig = {
 export function createSingleSetter(settings) {
     GenezisChecker(settings, SingleSetterConfig);
 
+    if (!settings.messageOnNoOptions) settings.messageOnNoOptions = "Default message for messageOnNoOptions";
+    if (!settings.messageOnNoModifiedDoc) settings.messageOnNoModifiedDoc = "Default message for messageOnNoModifiedDoc";
+    if (!settings.messageOnNoUserModifiedEntry) settings.messageOnNoUserModifiedEntry = "Default message for messageOnNoUserModifiedEntry";
+    if (!settings.messageOnNoUserFindEntry) settings.messageOnNoUserFindEntry = "Default message for messageOnNoUserFindEntry";
+    if (!settings.messageOnInternalError) settings.messageOnInternalError = "Default message for messageOnInternalError";
+    if (!settings.createErrorMessageForChecker) settings.createErrorMessageForChecker = (req, error) => `Checker failed for ${error.property} (default message for createErrorMessageForChecker)`;
+    if (!settings.modifiedFieldName) settings.modifiedFieldName = "modified";
+    if (!settings.findFieldName) settings.findFieldName = "find";
+    if (!settings.returnTheUpdatedDoc) settings.returnTheUpdatedDoc = false;
+    if (!settings.acceptEmptyUserInput) settings.acceptEmptyUserInput = false;
+
     return createRequest(settings, async (req, data, onSuccess) => {
         if (!data[settings.modifiedFieldName]) throw new RequestError(400, await getMessage(settings.messageOnNoUserModifiedEntry));
 
@@ -407,7 +424,7 @@ export function createSingleSetter(settings) {
             ? await resolveHandler(settings.updateQuery, req, data[settings.findFieldName], data)
             : await constructQueryFromArrayOfVariables(settings.updateBy, data[settings.findFieldName], await getMessage(settings.messageOnNoOptions));
 
-        const collection = await getCollection(settings.collection, req);
+        const collection = await getCollection(settings.collection, req, data);
 
         let result;
         try {
@@ -427,10 +444,10 @@ export function createSingleSetter(settings) {
 export const SingleAdderConfig = {
     ...getBaseGenezisConfig(),
     checker: GenezisChecker.required().function(),
-    messageOnNoModifiedDoc: MessageGenezisConfig.default("Default message for messageOnNoModifiedDoc"),
-    createErrorMessageForChecker: GenezisChecker.string().default((req, error) => `Checker failed for ${error.property} (default message for createErrorMessageForChecker)`),
-    returnTheIDOfNewDoc: GenezisChecker.boolean().default(false),
-    returnTheNewDoc: GenezisChecker.boolean().default(false),
+    messageOnNoModifiedDoc: MessageGenezisConfig,
+    createErrorMessageForChecker: GenezisChecker.string(),
+    returnTheIDOfNewDoc: GenezisChecker.boolean(),
+    returnTheNewDoc: GenezisChecker.boolean(),
     ___: GenezisChecker.onlyOneAvailable(["returnTheIDOfNewDoc", "returnTheNewDoc"])
 };
 
@@ -451,6 +468,11 @@ export const SingleAdderConfig = {
 export function createSingleAdder(settings) {
     GenezisChecker(settings, SingleAdderConfig);
 
+    if (!settings.messageOnNoModifiedDoc) settings.messageOnNoModifiedDoc = "Default message for messageOnNoModifiedDoc";
+    if (!settings.createErrorMessageForChecker) settings.createErrorMessageForChecker = (req, error) => `Checker failed for ${error.property} (default message for createErrorMessageForChecker)`;
+    if (!settings.returnTheIDOfNewDoc) settings.returnTheIDOfNewDoc = false;
+    if (!settings.returnTheNewDoc) settings.returnTheNewDoc = false;
+
     return createRequest(settings, async (req, data, onSuccess) => {
         if (!data) throw new RequestError(400, await getMessage(settings.messageOnNoUserAddEntry));
         
@@ -469,7 +491,7 @@ export function createSingleAdder(settings) {
             throw new RequestError(500, await getMessage(settings.messageOnInternalError), error);
         }
 
-        const collection = await getCollection(settings.collection, req);
+        const collection = await getCollection(settings.collection, req, data);
 
         let result;
         try {
