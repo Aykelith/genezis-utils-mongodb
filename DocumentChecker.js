@@ -179,7 +179,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
             if (document.length != settings.fixedLength) throw new CheckerError(`The property "${property}" has fixedLengh=${settings.fixedLength} but the size of array is ${document.length}`, property, data);
         }
     }]))
-}});
+};});
 
 let docMaker = async (config, configSettings, collection, runtimeSettings) => {
     if (!config) throw new Error("No config given");

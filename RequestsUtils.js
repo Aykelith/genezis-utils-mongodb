@@ -88,8 +88,8 @@ async function getMessage(message, req) {
  * @param {MongoDB.Collection | CollectionRetrieverFunction} collection The collection given in the settings
  * @param {Request} req The request object
  */
-export async function getCollection(collection, req, data) {
-    if (typeof collection == "function") return await collection(req, data);
+export async function getCollection(collection, req, data, sharedData) {
+    if (typeof collection == "function") return await collection(req, data, sharedData);
     return collection;
 }
 
@@ -448,6 +448,8 @@ export const SingleAdderConfig = {
     createErrorMessageForChecker: GenezisChecker.string(),
     returnTheIDOfNewDoc: GenezisChecker.boolean(),
     returnTheNewDoc: GenezisChecker.boolean(),
+    afterInserted: GenezisChecker.function(),
+
     ___: GenezisChecker.onlyOneAvailable(["returnTheIDOfNewDoc", "returnTheNewDoc"])
 };
 
@@ -473,15 +475,15 @@ export function createSingleAdder(settings) {
     if (!settings.returnTheIDOfNewDoc) settings.returnTheIDOfNewDoc = false;
     if (!settings.returnTheNewDoc) settings.returnTheNewDoc = false;
 
-    return createRequest(settings, async (req, data, onSuccess) => {
+    return createRequest(settings, async (req, data, onSuccess, sharedData) => {
         if (!data) throw new RequestError(400, await getMessage(settings.messageOnNoUserAddEntry));
         
         let doc;
         try {
-            doc = await settings.checker(req, data);
+            doc = await settings.checker(req, data, sharedData);
         } catch (error) {
-            console.log("Is Error instanceof CheckerError:", error instanceof CheckerError);
-            console.log("Is Error instanceof CheckerError:", error instanceof RequestError);
+            // console.log("Is Error instanceof CheckerError:", error instanceof CheckerError);
+            // console.log("Is Error instanceof CheckerError:", error instanceof RequestError);
             if (error instanceof CheckerError) {
                 throw new RequestError(400, await settings.createErrorMessageForChecker(req, error));
             } else if (error instanceof RequestError) {
@@ -491,7 +493,11 @@ export function createSingleAdder(settings) {
             throw new RequestError(500, await getMessage(settings.messageOnInternalError), error);
         }
 
-        const collection = await getCollection(settings.collection, req, data);
+        console.log("D1");
+
+        const collection = await getCollection(settings.collection, req, data, sharedData);
+
+        console.log("D2");
 
         let result;
         try {
@@ -500,7 +506,13 @@ export function createSingleAdder(settings) {
             throw new RequestError(500, error.message, error);
         }
 
+        console.log("D3");
+
         if (result.insertedCount != 1) throw new RequestError(500, await getMessage(settings.messageOnNoModifiedDoc));
+
+        if (settings.afterInserted) {
+            await settings.afterInserted(req, data, sharedData, result);
+        }
 
         await onSuccess(
             settings.returnTheNewDoc
