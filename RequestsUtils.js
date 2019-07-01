@@ -1,16 +1,16 @@
 import { ObjectID as MongoID } from "mongodb";
 
-import RequestError from "genezis-utils-router/RequestError";
-import createRequest, { GenezisRulesConfig as BaseRequestGenezisConfig } from "genezis-utils-router/createRequest";
+import RequestError from "@genezis/genezis-utils-router/RequestError";
+import createRequest, { GenezisRulesConfig as BaseRequestGenezisConfig } from "@genezis/genezis-utils-router/createRequest";
 
 import { Collection as MongoDBCollection } from "mongodb";
 
-import GenezisChecker from "genezis/Checker";
-import CheckerError from "genezis/CheckerError";
+import GenezisChecker from "@genezis/genezis/Checker";
+import CheckerError from "@genezis/genezis/CheckerError";
 
 import createSearchAggregate from "./createSearchAggregate";
 
-import numberOfObjectsWithProperty from "genezis/utils/numberOfObjectsWithProperty";
+import numberOfObjectsWithProperty from "@genezis/genezis/utils/numberOfObjectsWithProperty";
 
 /**
  * @name MongoDBRequestField

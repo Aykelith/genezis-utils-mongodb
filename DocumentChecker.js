@@ -1,6 +1,6 @@
-import { createGenerateOptions, stringChecker, integerChecker, booleanChecker, requiredChecker, numberChecker } from "genezis/Checker";
+import { createGenerateOptions, stringChecker, integerChecker, booleanChecker, requiredChecker, numberChecker } from "@genezis/genezis/Checker";
 import { ObjectID as MongoID, Int32 as MongoInt32 } from "mongodb";
-import CheckerError from "genezis/CheckerError";
+import CheckerError from "@genezis/genezis/CheckerError";
 
 let generateOptions = createGenerateOptions((generateOptions, previousChecks) => { return {
     id: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document) => {

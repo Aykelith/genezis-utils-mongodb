@@ -1,6 +1,6 @@
-import GenezisChecker from "genezis/Checker";
-import deleteOnProduction from "genezis/utils/deleteOnProduction";
-import { PLUGIN_ARGS_REQUIREMENTS_KEYWORD, PluginError } from "genezis/utils/doPlugins";
+import GenezisChecker from "@genezis/genezis/Checker";
+import deleteOnProduction from "@genezis/genezis/utils/deleteOnProduction";
+import { PLUGIN_ARGS_REQUIREMENTS_KEYWORD, PluginError } from "@genezis/genezis/utils/doPlugins";
 import DocumentChecker from "../DocumentChecker";
 
 const GeneratorGenezisCheckerConfig = deleteOnProduction({
