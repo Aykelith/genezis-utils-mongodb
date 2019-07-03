@@ -156,9 +156,9 @@ export default (queryData, preAggregateData = {}) => {
     if (queryData.sort) {
         if (!preAggregateData.$sort) searchObject.push({ $sort: {} });
 
+        // TODO: Multiple fields sorting
         const field = Object.keys(queryData.sort)[0];
-        if (field != "code") searchObject[1].$sort = { [field]: parseInt(queryData.sort[field]), code: -1 }; // <= TODO: Generalize it and allow multiple sort fields
-        else                 searchObject[1].$sort = { [field]: parseInt(queryData.sort[field]) };
+        searchObject[1].$sort = { [field]: parseInt(queryData.sort[field]) };
     }
 
     if (queryData.onlyPublish) searchObject[0]["$match"]["promotions.own.normal"] = true; // <= TODO: Delete it

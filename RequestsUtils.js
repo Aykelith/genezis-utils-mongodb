@@ -62,9 +62,24 @@ const VariableTypes = {
         return (x) => {
             if (!MongoID.isValid(x)) throw new RequestError(settings.errorCode, settings.errorMessage);
             return MongoID(x);
-        }
+        };
+    },
+
+    Integer: (settings) => {
+        GenezisChecker(settings, {
+            errorCode: GenezisChecker.integer(),
+            errorMessage: GenezisChecker.string().required()
+        });
+
+        if (!settings.errorCode) settings.errorCode = 400;
+
+        return (x) => {
+            let n = Number.parseInt(x);
+            if (Number.isNaN(n)) throw new RequestError(settings.errorCode, settings.errorMessage);
+            return n;
+        };
     }
-}
+};
 
 async function resolveHandler(variable) {
     if (typeof variable == "function") {
