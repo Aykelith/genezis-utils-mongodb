@@ -376,7 +376,9 @@ export const SingleSetterConfig = {
     findFieldName: GenezisChecker.string(),
     returnTheUpdatedDoc: GenezisChecker.boolean(),
     acceptEmptyUserInput: GenezisChecker.boolean(),
-    updateQuery: GenezisChecker.or([ GenezisChecker.object(), GenezisChecker.function() ])
+    updateQuery: GenezisChecker.or([ GenezisChecker.object(), GenezisChecker.function() ]),
+
+    afterUpdated: GenezisChecker.function(),
 };
 
 /**
@@ -415,7 +417,7 @@ export function createSingleSetter(settings) {
     if (!settings.returnTheUpdatedDoc) settings.returnTheUpdatedDoc = false;
     if (!settings.acceptEmptyUserInput) settings.acceptEmptyUserInput = false;
 
-    return createRequest(settings, async (req, data, onSuccess) => {
+    return createRequest(settings, async (req, data, onSuccess, sharedData) => {
         if (!data[settings.modifiedFieldName]) throw new RequestError(400, await getMessage(settings.messageOnNoUserModifiedEntry));
 
         let findIsEmpty = !data[settings.findFieldName];
@@ -449,6 +451,10 @@ export function createSingleSetter(settings) {
         }
 
         if (result.modifiedCount != 1) throw new RequestError(400, await getMessage(settings.messageOnNoModifiedDoc));
+
+        if (settings.afterUpdated) {
+            await settings.afterUpdated(req, data, sharedData, result);
+        }
 
         await onSuccess(
             settings.returnTheUpdatedDoc ? result.ops[0] : {}

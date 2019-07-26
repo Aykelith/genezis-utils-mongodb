@@ -2,6 +2,10 @@ import { createGenerateOptions, stringChecker, integerChecker, booleanChecker, r
 import { ObjectID as MongoID, Int32 as MongoInt32 } from "mongodb";
 import CheckerError from "@genezis/genezis/CheckerError";
 
+export const Errors = {
+    NOT_UNIQUE: "genezis-utils-mongodb_documentchecker_not_unique"
+};
+
 let generateOptions = createGenerateOptions((generateOptions, previousChecks) => { return {
     id: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document) => {
         if (data === undefined) return;
@@ -48,7 +52,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                     if (resultDoc._id.equals(runtimeSettings[property].ignoreDocumentsWithIDs)) throw new CheckerError("", property, data);
                 }
             } else {
-                throw new CheckerError("4", property, data);
+                throw new CheckerError(Errors.NOT_UNIQUE, property, data);
             }
         }
     }])),
