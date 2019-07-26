@@ -425,7 +425,7 @@ export function createSingleSetter(settings) {
 
         let docData;
         try {
-            docData = await settings.checker(req, data[settings.modifiedFieldName], data);
+            docData = await settings.checker(req, data[settings.modifiedFieldName], data, sharedData);
         } catch (error) {
             console.log("Error from checker:", error);
             if (error instanceof CheckerError) {
