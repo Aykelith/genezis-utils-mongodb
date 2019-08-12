@@ -6,7 +6,8 @@ import createRequest, { GenezisRulesConfig as BaseRequestGenezisConfig } from "@
 import { Collection as MongoDBCollection } from "mongodb";
 
 import GenezisChecker from "@genezis/genezis/Checker";
-import CheckerError from "@genezis/genezis/CheckerError";
+import GenezisCheckerError from "@genezis/genezis/CheckerError";
+import GenezisCheckerErrorTypes from "@genezis/genezis/CheckerErrorTypes";
 
 import createSearchAggregate from "./createSearchAggregate";
 
@@ -198,7 +199,7 @@ export const CollectionGenezisConfig = GenezisChecker.or([
 export const MessageGenezisConfig = GenezisChecker.or([
     GenezisChecker.string(),
     GenezisChecker.function()
-])
+]);
 
 /**
  * @name BaseGenezisConfigParams
@@ -217,7 +218,7 @@ function getBaseGenezisConfig() {
     return {
         collection: CollectionGenezisConfig.required(),
         ...BaseRequestGenezisConfig
-    }
+    };
 }
 
 /**
@@ -428,13 +429,13 @@ export function createSingleSetter(settings) {
             docData = await settings.checker(req, data[settings.modifiedFieldName], data, sharedData);
         } catch (error) {
             console.log("Error from checker:", error);
-            if (error instanceof CheckerError) {
+            if (error instanceof GenezisCheckerError) {
                 throw new RequestError(400, await settings.createErrorMessageForChecker(req, error));
             } else if (error instanceof RequestError) {
                 throw error;
             }
 
-            throw new RequestError(500, await getMessage(settings.messageOnInternalError), error)
+            throw new RequestError(500, await getMessage(settings.messageOnInternalError), error);
         }
 
         let updateQuery = settings.updateQuery
@@ -505,7 +506,7 @@ export function createSingleAdder(settings) {
         } catch (error) {
             // console.log("Is Error instanceof CheckerError:", error instanceof CheckerError);
             // console.log("Is Error instanceof CheckerError:", error instanceof RequestError);
-            if (error instanceof CheckerError) {
+            if (error instanceof GenezisCheckerError) {
                 throw new RequestError(400, await settings.createErrorMessageForChecker(req, error));
             } else if (error instanceof RequestError) {
                 throw error;
@@ -542,6 +543,65 @@ export function createSingleAdder(settings) {
                     ? result.insertedId.toString()
                     : {}
         );
+    });
+}
+
+export const SingleDeleterConfig = {
+    ...getBaseGenezisConfig(),
+    messageOnNoDocFound: MessageGenezisConfig,
+    messageOnNoInputFieldName: MessageGenezisConfig,
+    createErrorMessageForChecker: GenezisChecker.string(),
+    afterDeletedRequiresDoc: GenezisChecker.boolean(),
+    afterDeleted: GenezisChecker.function(),
+    oneField: GenezisChecker.object({
+        shape: {
+            inputFieldName: GenezisChecker.string().required(),
+            dbFieldName: GenezisChecker.string().required(),
+            fieldTransformer: GenezisChecker.function(),
+        }
+    }),
+    queryMaker: GenezisChecker.function()
+};
+
+export function createSingleDeleter(settings) {
+    GenezisChecker(settings, SingleDeleterConfig);
+
+    if (!settings.messageOnNoData) settings.messageOnNoData = "Default message for messageOnNoData";
+    if (!settings.createErrorMessageForChecker) settings.createErrorMessageForChecker = (req, error) => `Checker failed for ${error.property} (default message for createErrorMessageForChecker)`;
+    if (!settings.afterDeletedRequiresDoc) settings.afterDeletedRequiresDoc = false;
+    if (!settings.queryMaker) {
+        if (settings.oneField) {
+            settings.queryMaker = (req, data, sharedData) => { return { [settings.dbFieldName]: data[settings.inputFieldName] }; };
+        } else {
+            throw new GenezisCheckerError(GenezisCheckerErrorTypes.REQUIRED_BUT_MISSING, "queryMaker");
+        }
+    }
+
+    return createRequest(settings, async (req, data, onSuccess, sharedData) => {
+        if (!data) throw new RequestError(400, await getMessage(settings.messageOnNoData));
+
+        if (settings.oneField) {
+            if (!data[settings.inputFieldName]) throw new RequestError(400, await getMessage(settings.messageOnNoInputFieldName));
+
+            if (settings.fieldTransformer) data[settings.inputFieldName] = await settings.fieldTransformer(data[settings.inputFieldName]);
+        }
+
+        const collection = await getCollection(settings.collection, req, data, sharedData);
+        
+        let result;
+        try {
+            result = await collection[settings.afterDeletedRequiresDoc ? "findOneAndDelete" : "deleteOne"](await settings.queryMaker(req, data, sharedData));
+        } catch (error) {
+            throw new RequestError(500, error.message, error);
+        }
+
+        // TODO: Should I check if result.ok is good?
+
+        if (settings.afterDeleted) {
+            await settings.afterDeleted(req, data, sharedData, result.value);
+        }
+
+        await onSuccess({});
     });
 }
 
