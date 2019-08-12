@@ -620,6 +620,7 @@ export default {
     createSingleSetter,
     createSingleAdder,
     createMultipleGetter,
+    createSingleDeleter,
 
     SingleGetterConfig: SingleGetterConfig,
     MultipleGetterConfig: MultipleGetterConfig,
