@@ -550,7 +550,6 @@ export const SingleDeleterConfig = {
     ...getBaseGenezisConfig(),
     messageOnNoDocFound: MessageGenezisConfig,
     messageOnNoInputFieldName: MessageGenezisConfig,
-    createErrorMessageForChecker: GenezisChecker.string(),
     afterDeletedRequiresDoc: GenezisChecker.boolean(),
     afterDeleted: GenezisChecker.function(),
     oneField: GenezisChecker.object({
@@ -567,7 +566,6 @@ export function createSingleDeleter(settings) {
     GenezisChecker(settings, SingleDeleterConfig);
 
     if (!settings.messageOnNoData) settings.messageOnNoData = "Default message for messageOnNoData";
-    if (!settings.createErrorMessageForChecker) settings.createErrorMessageForChecker = (req, error) => `Checker failed for ${error.property} (default message for createErrorMessageForChecker)`;
     if (!settings.afterDeletedRequiresDoc) settings.afterDeletedRequiresDoc = false;
     if (!settings.queryMaker) {
         if (settings.oneField) {
