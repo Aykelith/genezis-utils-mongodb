@@ -1,6 +1,6 @@
 import GenezisChecker from "@genezis/genezis/Checker";
 import deleteOnProduction from "@genezis/genezis/utils/deleteOnProduction";
-import { PLUGIN_ARGS_REQUIREMENTS_KEYWORD, PluginError } from "@genezis/genezis/utils/doPlugins";
+import { PLUGIN_ARGS_REQUIREMENTS_KEYWORD } from "@genezis/genezis/utils/doPlugins";
 import DocumentChecker from "../DocumentChecker";
 
 const GeneratorGenezisCheckerConfig = deleteOnProduction({
@@ -26,11 +26,7 @@ export default (settings) => {
                 ? settings.generateCustomDocumentCreatorSettingsWhenIsEditing(data.isEditing)
                 : settings.documentCreatorSettings;
 
-        try {
-            Object.assign(data.doc, await DocumentChecker(data.input, settings.documentConfig, documentCreatorSettings));
-        } catch (error) {
-            throw new PluginError(await settings.errorMessageGenerator(error, data));
-        }
+        Object.assign(data.doc, await DocumentChecker(data.input, settings.documentConfig, documentCreatorSettings));
     }
 
     documentCreator[PLUGIN_ARGS_REQUIREMENTS_KEYWORD] = [

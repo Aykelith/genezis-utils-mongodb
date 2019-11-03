@@ -1,5 +1,5 @@
 import { createGenerateOptions, stringChecker, integerChecker, booleanChecker, requiredChecker, numberChecker } from "@genezis/genezis/Checker";
-import { ObjectID as MongoID, Int32 as MongoInt32 } from "mongodb";
+import { ObjectID as MongoID, Int32 as MongoInt32, Long as MongoInt64 } from "mongodb";
 import CheckerError from "@genezis/genezis/CheckerError";
 
 export const Errors = {
@@ -25,13 +25,50 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                 let converted = Number.parseInt(data);
 
                 if (Number.isNaN(converted)) throw new CheckerError(`The property "${property}" with value "${data}" must be a number`, property, data);
-                if (document) document[field] = MongoInt32(converted);
             } else {
                 throw new CheckerError(`The property "${property}" with value "${data}" must be an integer`, property, data);
             }
         }
 
         if (document) document[field] = MongoInt32(data);
+    }])),
+    int64: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document) => {
+        if (data === undefined) return;
+        
+        const isInteger = Number.isInteger(data);
+        if (!isInteger) {
+            if (settings.convert) {
+                let converted = Number.parseInt(data);
+
+                if (Number.isNaN(converted)) throw new CheckerError(`The property "${property}" with value "${data}" must be a number`, property, data);
+            } else {
+                throw new CheckerError(`The property "${property}" with value "${data}" must be an integer`, property, data);
+            }
+        }
+
+        if (document) document[field] = MongoInt64.fromNumber(data);
+    }])),
+    date: (settings = {}) => generateOptions(previousChecks.concat([(property, data, config, field, document) => {
+        if (data === undefined) return;
+
+        if (!(data instanceof Date)) {
+            console.log("LOOOOL");
+            const isInteger = Number.isInteger(data);
+            if (!isInteger) {
+                if (settings.convert) {
+                    let converted = Number.parseInt(data);
+
+                    if (Number.isNaN(converted)) throw new CheckerError(`The property "${property}" with value "${data}" must be a Date or a number`, property, data);
+                    data = new Date(converted);
+                } else {
+                    throw new CheckerError(`The property "${property}" with value "${data}" must be a Date or a number`, property, data);
+                }
+            }
+
+            data = new Date(data);
+        }
+
+        if (document) document[field] = data;
     }])),
     float: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (config[property] !== undefined) {
@@ -143,7 +180,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
 
         if (settings.onCopies) {
             let arrayWithoutCopies = [];
-            let isUniqueFunc = settings.onCopies.isUniqueFunc || ((value, array) => { return !array.includes(value) });
+            let isUniqueFunc = settings.onCopies.isUniqueFunc || ((value, array) => { return !array.includes(value); });
             if (settings.onCopies.checkBefore) {
                 data.forEach(child => {
                     if (isUniqueFunc(child, arrayWithoutCopies)) arrayWithoutCopies.push(child);
@@ -152,7 +189,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                             throw new CheckerError("1", property, data);
                         }
                     }
-                })
+                });
             } else if (!settings.onCopies.checkAfter) {
                 throw new CheckerError("2", property, data);
             }
@@ -173,7 +210,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
         // console.log("(((", document, data);
         if (settings.of) {
             data.forEach((child, index) => {
-                settings.of._[0](`${property}[${index}]`, child, { [`${property}[${index}]`]: true }, index, document[field], collection, runtimeSettings)
+                settings.of._[0](`${property}[${index}]`, child, { [`${property}[${index}]`]: true }, index, document[field], collection, runtimeSettings);
             });
         } else {
             document[field] = data;
@@ -204,13 +241,14 @@ let docMaker = async (config, configSettings, collection, runtimeSettings) => {
                 config, 
                 null, 
                 document, 
-                collection, 
+                collection,
                 runtimeSettings
             )));
         }
 
-        if (!configSettings[property].type) throw new Error();
-        if (!configSettings[property].field) throw new Error();
+        if (!configSettings[property]) throw new Error("A property is undefined");
+        if (!configSettings[property].type) throw new Error(`The property "${property}" is missing the field "type"`);
+        if (!configSettings[property].field) throw new Error(`The property "${property}" is missing the field "field"`);
 
         return Promise.all(configSettings[property].type._.map(checker => checker(
             property, 
@@ -225,7 +263,7 @@ let docMaker = async (config, configSettings, collection, runtimeSettings) => {
 
     await Promise.all(promises);
     return document;
-}
+};
 
 Object.assign(docMaker, generateOptions());
 

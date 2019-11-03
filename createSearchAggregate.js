@@ -98,7 +98,7 @@ function generateQuery(fieldName, data) {
             array.push(MongoID(data.value[j]));
         }
 
-        return { $in: array };
+        return { [data.notIn ? "$nin" : "$in"]: array };
     } else if (data.type == SearchType.IN_NUMBERS) {
         let array = [];
 
@@ -107,7 +107,7 @@ function generateQuery(fieldName, data) {
             array.push(parseInt(data.value[j]));
         }
 
-        return { $in: array };
+        return { [data.notIn ? "$nin" : "$in"]: array };
     } else if (data.type == SearchType.IN_STRINGS) {
         let array = [];
 
@@ -115,7 +115,7 @@ function generateQuery(fieldName, data) {
             array.push(data.value[j]);
         }
 
-        return { $in: array };
+        return { [data.notIn ? "$nin" : "$in"]: array };
     } else if (data.type == SearchType.REGEX) {
         let obj = { $regex: data.value };
 
