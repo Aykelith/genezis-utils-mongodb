@@ -27,6 +27,7 @@ Short summary of the arguments:
 | userProjectionInputField | String | No | The name of the input field where the user will specify the fields for projection. It is required if `userProjectionAllowed` is `true`
 | customOnSuccess | Function->null(req, data, sharedData, onSuccess, foundDoc) | No | A function that will replace the actual call to `onSuccess(foundDoc)`. It will receive the request object, the request data, the shared data, the `onSuccess` function and the found doc
 | onNoDocumentFound | Function->boolean(req, data, sharedData, onSuccess) | No | Called when no document found. It should return `true` if inside the function the method `onSuccess` is called. It will receive the request object, the request data, the shared data and the `onSuccess` function.
+| customFindOneSettings | Function->object(req, data, sharedData, actualFindOneSettings) | No | A function that is called after user projection is calculated (if allowed) and receives the request object, the request data, the shared data and the actual `findOneSettings`. `findOneSettings` is the object that will be given to MongoDB's Collection `findOne` as settings.
 
 **Attention!** The fields `getBy` and `customFindQueryMaker` can't go together, but at least one is expected to be given!  
 **Attention!** `findQueryMiddleware` works only with `getBy`, but not with `customFindQueryMaker`

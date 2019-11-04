@@ -257,6 +257,7 @@ export const SingleGetterConfig = {
     customOnSuccess: GenezisChecker.function(),
     findQueryMiddleware: GenezisChecker.function(),
     customFindQueryMaker: GenezisChecker.function(),
+    customFindOneSettings: GenezisChecker.function()
 };
 
 /**
@@ -311,6 +312,10 @@ export function createSingleGetter(settings) {
             for (let i = 0, length = data[settings.userProjectionInputField].length; i < length; ++i) {
                 findOneSettings.projection[data[settings.userProjectionInputField][i]] = 1;
             }
+        }
+
+        if (settings.customFindOneSettings) {
+            findOneSettings = await resolveHandler(settings.customFindOneSettings, req, data, sharedData, findOneSettings);
         }
 
         let findOneQuery;

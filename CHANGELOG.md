@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Version 0.2.9
+
+- added the parameter `customFindOneSettings` to `RequestUtils.js:createSingleGetter` that is a function that is able to
+modify the settings given to the query.
+
 ## 21.10.2019
 
 - added messages to some errors in `DocumentChecker.js`
