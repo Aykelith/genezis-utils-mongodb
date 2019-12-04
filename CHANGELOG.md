@@ -1,9 +1,12 @@
 # CHANGELOG
 
+## Version 0.2.9100
+
+- built ES5 files in folder `_es5`
+
 ## Version 0.2.9
 
-- added the parameter `customFindOneSettings` to `RequestUtils.js:createSingleGetter` that is a function that is able to
-modify the settings given to the query.
+- added the parameter `customFindOneSettings` to `RequestUtils.js:createSingleGetter` that is a function that is able to modify the settings given to the query.
 
 ## 21.10.2019
 
