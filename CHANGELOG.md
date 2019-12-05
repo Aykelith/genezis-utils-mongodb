@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 0.2.9110
+
+- moved ES5 into his own package
+
 ## Version 0.2.9100
 
 - built ES5 files in folder `_es5`
