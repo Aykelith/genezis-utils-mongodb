@@ -1,17 +1,18 @@
-import { ObjectID as MongoID } from "mongodb";
-
+//= Functions & Modules
+// Own
+import createSearchAggregate from "./createSearchAggregate";
+// Packages
+import GenezisChecker from "@genezis/genezis/Checker";
+import GenezisGeneralError from "@genezis/genezis/GenezisGeneralError";
+import GenezisCheckerError from "@genezis/genezis/CheckerError";
+import numberOfObjectsWithProperty from "@genezis/genezis/utils/numberOfObjectsWithProperty";
+import { ObjectID as MongoID, Collection as MongoDBCollection } from "mongodb";
 import RequestError from "@genezis/genezis-utils-router/RequestError";
 import createRequest, { GenezisRulesConfig as BaseRequestGenezisConfig } from "@genezis/genezis-utils-router/createRequest";
 
-import { Collection as MongoDBCollection } from "mongodb";
-
-import GenezisChecker from "@genezis/genezis/Checker";
-import GenezisCheckerError from "@genezis/genezis/CheckerError";
+//= Structures & Data
+// Packages
 import GenezisCheckerErrorTypes from "@genezis/genezis/CheckerErrorTypes";
-
-import createSearchAggregate from "./createSearchAggregate";
-
-import numberOfObjectsWithProperty from "@genezis/genezis/utils/numberOfObjectsWithProperty";
 
 /**
  * @name MongoDBRequestField
@@ -226,7 +227,7 @@ export const MessageGenezisConfig = GenezisChecker.or([
 function getBaseGenezisConfig() {
     return {
         collection: CollectionGenezisConfig.required(),
-        onError: GenezisChecker.function().required(),
+        onError: GenezisChecker.function(),
         ...BaseRequestGenezisConfig
     };
 }
@@ -330,7 +331,7 @@ export function createSingleGetter(settings) {
 
             if (!findOneQuery) {
                 await settings.onError(
-                    new GenezisCheckerError(Errors.QUERY_FROM_GIVEN_FIELDS_NOT_FOUND_MATCH), 
+                    new GenezisGeneralError(Errors.QUERY_FROM_GIVEN_FIELDS_NOT_FOUND_MATCH), 
                     req, 
                     data, 
                     sharedData
@@ -459,9 +460,11 @@ export function createSingleSetter(settings) {
     if (!settings.returnTheUpdatedDoc) settings.returnTheUpdatedDoc = false;
     if (!settings.acceptEmptyUserInput) settings.acceptEmptyUserInput = false;
 
+    if (!settings.onError) settings.onError = (error) => { throw error; }
+
     return createRequest(settings, async (req, data, onSuccess, sharedData) => {
         if (!data[settings.modifiedFieldName]) await settings.onError(
-            new GenezisCheckerError(Errors.EDIT_REQUEST__NO_USER_MODIFIED_ENTRY, settings.modifiedFieldName),
+            new GenezisGeneralError(Errors.EDIT_REQUEST__NO_USER_MODIFIED_ENTRY, settings.modifiedFieldName),
             req,
             data,
             sharedData    
@@ -469,7 +472,7 @@ export function createSingleSetter(settings) {
 
         let findIsEmpty = !data[settings.findFieldName];
         if (!settings.acceptEmptyUserInput && findIsEmpty) await settings.onError(
-            new GenezisCheckerError(Errors.EDIT_REQUEST__NO_USER_FIND_ENTRY, settings.findFieldName),
+            new GenezisGeneralError(Errors.EDIT_REQUEST__NO_USER_FIND_ENTRY, settings.findFieldName),
             req,
             data,
             sharedData    
@@ -480,7 +483,7 @@ export function createSingleSetter(settings) {
             sharedData.updateQuery = await constructQueryFromArrayOfVariables(settings.updateBy, data[settings.findFieldName]);
 
             if (!sharedData.updateQuery) await settings.onError(
-                new GenezisCheckerError(Errors.QUERY_FROM_GIVEN_FIELDS_NOT_FOUND_MATCH), 
+                new GenezisGeneralError(Errors.QUERY_FROM_GIVEN_FIELDS_NOT_FOUND_MATCH), 
                 req, 
                 data, 
                 sharedData
@@ -496,7 +499,7 @@ export function createSingleSetter(settings) {
             docData = await settings.checker(req, data[settings.modifiedFieldName], data, sharedData);
         } catch (error) {
             console.log("Error from checker:", error);
-            if (error instanceof GenezisCheckerError) {
+            if (error instanceof GenezisGeneralError) {
                 await settings.onError(error, req, data, sharedData);
             }
 
@@ -513,7 +516,7 @@ export function createSingleSetter(settings) {
         }
 
         if (result.modifiedCount != 1) await settings.onError(
-            new GenezisCheckerError(Errors.NO_MODIFIED_DOC), 
+            new GenezisGeneralError(Errors.NO_MODIFIED_DOC), 
             req, 
             data, 
             sharedData
@@ -557,7 +560,7 @@ export function createSingleAdder(settings) {
 
     return createRequest(settings, async (req, data, onSuccess, sharedData) => {
         if (!data) await settings.onError(
-            new GenezisCheckerError(Errors.ADD_REQUEST__NO_USER_ADD_ENTRY),
+            new GenezisGeneralError(Errors.ADD_REQUEST__NO_USER_ADD_ENTRY),
             req,
             data,
             sharedData    
@@ -567,7 +570,7 @@ export function createSingleAdder(settings) {
         try {
             doc = await settings.checker(req, data, sharedData);
         } catch (error) {
-            if (error instanceof GenezisCheckerError) {
+            if (error instanceof GenezisGeneralError) {
                 await settings.onError(error, req, data, sharedData);
             }
 
@@ -584,7 +587,7 @@ export function createSingleAdder(settings) {
         }
 
         if (result.insertedCount != 1) await settings.onError(
-            new GenezisCheckerError(Errors.NO_MODIFIED_DOC),
+            new GenezisGeneralError(Errors.NO_MODIFIED_DOC),
             req,
             data,
             sharedData
@@ -645,7 +648,7 @@ export function createSingleDeleter(settings) {
 
         if (settings.oneField) {
             if (!data[settings.oneField.inputFieldName]) await settings.onError(
-                new GenezisCheckerError(Errors.DELETE_REQUEST__NO_INPUT_FIELD_NAME),
+                new GenezisGeneralError(Errors.DELETE_REQUEST__NO_INPUT_FIELD_NAME),
                 req,
                 data,
                 sharedData

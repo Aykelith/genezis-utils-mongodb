@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 0.2.912
+
+- replaced where needed `GenezisCheckerError` with `GenezisGeneralError`
+
 ## Version 0.2.9110
 
 - moved ES5 into his own package
