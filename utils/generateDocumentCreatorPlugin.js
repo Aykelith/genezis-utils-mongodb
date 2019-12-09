@@ -5,7 +5,6 @@ import DocumentChecker from "../DocumentChecker";
 
 const GeneratorGenezisCheckerConfig = deleteOnProduction({
     documentConfig: GenezisChecker.required(),
-    errorMessageGenerator: GenezisChecker.function().required(),
     documentCreatorSettings: GenezisChecker.object(),
     generateCustomDocumentCreatorSettingsWhenIsEditing: GenezisChecker.function(),
 });

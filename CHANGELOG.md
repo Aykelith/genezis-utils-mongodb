@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 0.2.913
+
+- removed unused setting from `generateDocumentCreatorPlugin`
+
 ## Version 0.2.912
 
 - replaced where needed `GenezisCheckerError` with `GenezisGeneralError`
