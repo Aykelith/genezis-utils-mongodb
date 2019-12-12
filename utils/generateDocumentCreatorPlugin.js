@@ -35,7 +35,7 @@ export default (settings) => {
     ];
 
     if (settings.addExtraPluginArgs) {
-        settings.addExtraPluginArgs(documentCreator);
+        settings.addExtraPluginArgs(documentCreator[PLUGIN_ARGS_REQUIREMENTS_KEYWORD]);
     }
 
     return documentCreator;
