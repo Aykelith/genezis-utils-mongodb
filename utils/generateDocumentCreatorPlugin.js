@@ -5,7 +5,7 @@ import DocumentChecker from "../DocumentChecker";
 
 const GeneratorGenezisCheckerConfig = deleteOnProduction({
     documentConfig: GenezisChecker.required(),
-    createDocumentCreatorSettings: GenezisChecker.function(),
+    createDocumentCreatorExtraParameters: GenezisChecker.function(),
     addExtraPluginArgs: GenezisChecker.function()
 });
 
@@ -23,9 +23,10 @@ export default (settings) => {
     async function documentCreator(data) {
         GenezisChecker(data, DocumentCreatorGenezisCheckerConfig);
 
-        let documentCreatorSettings = settings.createDocumentCreatorSettings && settings.createDocumentCreatorSettings();
+        let documentCreatorExtraParameters = settings.createDocumentCreatorExtraParameters && 
+                                             settings.createDocumentCreatorExtraParameters();
 
-        Object.assign(data.doc, await DocumentChecker(data.input, settings.documentConfig, documentCreatorSettings));
+        Object.assign(data.doc, await DocumentChecker(data.input, settings.documentConfig, ...documentCreatorExtraParameters));
     }
 
     documentCreator[PLUGIN_ARGS_REQUIREMENTS_KEYWORD] = [
