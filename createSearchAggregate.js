@@ -24,9 +24,13 @@ function convertSearchType(type, value) {
 
         case ValueType.BOOL:
             return (typeof(value) == typeof(true) && value) || (value == "true");
-    }
 
-    return value;
+        case ValueType.STRING:
+            return value.toString();
+
+        default:
+            throw new GenezisGeneralError(`Not found the type "${type}"`);
+    }
 }
 
 /**

@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Version 0.2.915
+
+- added the type `STRING` to `data/SearchAggregateValueType.js`
+- throws error if `type` is not found in `createSearchAggregate.js:convertSearchType`
+
 ## Version 0.2.914
 
 - changed `WrongParamsError` to `GenezisGeneralError` into `createSearchAggregate.js`

@@ -1,5 +1,6 @@
 export default {
     INTEGER: "i",
     MONGOID: "id",
-    BOOL: "b"
+    BOOL: "b",
+    STRING: "s"
 };
