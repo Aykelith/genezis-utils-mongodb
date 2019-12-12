@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Version 0.2.914
+
+- changed `WrongParamsError` to `GenezisGeneralError` into `createSearchAggregate.js`
+- added an default `onError` as parameter to all functions from `RequestsUtils.js`
+
 ## Version 0.2.913
 
 - removed unused setting from `generateDocumentCreatorPlugin`

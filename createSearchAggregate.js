@@ -1,7 +1,10 @@
-import { ObjectID as MongoID } from "mongodb";
-
+//= Functions & Modules
+// Own
 import ValueType from "./data/SearchAggregateValueType";
 import SearchType from "./data/SearchAggregateSearchType";
+// Packages
+import GenezisGeneralError from "@genezis/genezis/GenezisGeneralError";
+import { ObjectID as MongoID } from "mongodb";
 
 /**
  * Convert a string value to its type
@@ -64,7 +67,7 @@ function generateQuery(fieldName, data) {
     }
 
     if (data.value == null) {
-        throw new WrongParamsError("'data' must contains the value", { n:0, data: data });
+        throw new GenezisGeneralError("'data' must contains the value", { data: data });
     }
 
     if (
@@ -76,7 +79,7 @@ function generateQuery(fieldName, data) {
         &&
         !Array.isArray(data.value)
     ) {
-        throw new WrongParamsError("'data.value' must be an array", { n: 2, type: data.type });
+        throw new GenezisGeneralError("'data.value' must be an array", { type: data.type });
     }
     
     if (data.type == SearchType.BIGGER_THAN) {
@@ -124,7 +127,7 @@ function generateQuery(fieldName, data) {
         return obj;
     }
 
-    throw new WrongParamsError("Type is invalid", { n: 2, type: data.type });
+    throw new GenezisGeneralError("Type is invalid", { type: data.type });
 }
 
 /**
@@ -169,7 +172,7 @@ export default (queryData, preAggregateData = {}) => {
     if (queryData.projection) {
         if (!Array.isArray(queryData.projection)) {
             console.log(queryData);
-            throw new WrongParamsError("'projection' must be an array", { n: 0 });
+            throw new GenezisGeneralError("'projection' must be an array");
         }
         
         let projection = {};
@@ -196,7 +199,7 @@ export default (queryData, preAggregateData = {}) => {
         let x = parseInt(queryData.range.x);
         if (queryData.range.x) {
             if (Number.isNaN(x) || x < 0) {
-                throw new WrongParamsError("'range.x' must be a valid positive integer", { n: 1 });
+                throw new GenezisGeneralError("'range.x' must be a valid positive integer");
             }
         } else {
             x = 0;
@@ -206,7 +209,7 @@ export default (queryData, preAggregateData = {}) => {
 
         const y = parseInt(queryData.range.y);
         if (Number.isNaN(y) || y < x) {
-            throw new WrongParamsError("'range.y' must be a valid positive integer and bigger than 'range.x'(if present)", { n: 1 });
+            throw new GenezisGeneralError("'range.y' must be a valid positive integer and bigger than 'range.x'(if present)");
         }
 
         searchObject.push({ $limit: y - x });

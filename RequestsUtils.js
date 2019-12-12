@@ -295,6 +295,8 @@ export function createSingleGetter(settings) {
         if (!settings.getBy) throw new Error("You can't specify \"customFindQueryMaker\" and \"getBy\" togheter");
     }
 
+    if (!settings.onError) settings.onError = (error) => { throw error; }
+
     return createRequest(settings, async (req, data, onSuccess, sharedData) => {
         let findOneSettings = {};
         if (settings.userProjectionAllowed && data[settings.userProjectionInputField]) {
@@ -544,7 +546,7 @@ export const SingleAdderConfig = {
  * @function
  * @description Create a single setter that can add a MongoDB document
  * @exports createSingleAdder
- * @genezis genezis-utils-router
+ * @genezis genezis-utils-routers
  * 
  * @param {GenezisChecker} settings The settings for the request
  * @combineWith ":BaseGenezisConfigParams"
@@ -557,6 +559,8 @@ export function createSingleAdder(settings) {
     GenezisChecker(settings, SingleAdderConfig);
 
     if (!settings.returnTheNewDoc) settings.returnTheNewDoc = false;
+
+    if (!settings.onError) settings.onError = (error) => { throw error; }
 
     return createRequest(settings, async (req, data, onSuccess, sharedData) => {
         if (!data) await settings.onError(
@@ -642,6 +646,8 @@ export function createSingleDeleter(settings) {
             throw new GenezisCheckerError(GenezisCheckerErrorTypes.REQUIRED_BUT_MISSING, "queryMaker");
         }
     }
+
+    if (!settings.onError) settings.onError = (error) => { throw error; }
 
     return createRequest(settings, async (req, data, onSuccess, sharedData) => {
         if (!data) throw new RequestError(400, await getMessage(settings.messageOnNoData));
