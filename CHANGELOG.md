@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 0.2.916
+
+- modified the parameters to `utils/generateDocumentCreatorPlugin.js` for better clarity
+
 ## Version 0.2.915
 
 - added the type `STRING` to `data/SearchAggregateValueType.js`

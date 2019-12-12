@@ -5,8 +5,8 @@ import DocumentChecker from "../DocumentChecker";
 
 const GeneratorGenezisCheckerConfig = deleteOnProduction({
     documentConfig: GenezisChecker.required(),
-    documentCreatorSettings: GenezisChecker.object(),
-    generateCustomDocumentCreatorSettingsWhenIsEditing: GenezisChecker.function(),
+    createDocumentCreatorSettings: GenezisChecker.function(),
+    addExtraPluginArgs: GenezisChecker.function()
 });
 
 const DocumentCreatorGenezisCheckerConfig = deleteOnProduction({
@@ -14,16 +14,16 @@ const DocumentCreatorGenezisCheckerConfig = deleteOnProduction({
     input: GenezisChecker.object()
 });
 
+/**
+ * 
+ */
 export default (settings) => {
     GenezisChecker(settings, GeneratorGenezisCheckerConfig);
 
     async function documentCreator(data) {
         GenezisChecker(data, DocumentCreatorGenezisCheckerConfig);
 
-        let documentCreatorSettings = 
-            (settings.generateCustomDocumentCreatorSettingsWhenIsEditing)
-                ? settings.generateCustomDocumentCreatorSettingsWhenIsEditing(data.isEditing)
-                : settings.documentCreatorSettings;
+        let documentCreatorSettings = settings.createDocumentCreatorSettings && settings.createDocumentCreatorSettings();
 
         Object.assign(data.doc, await DocumentChecker(data.input, settings.documentConfig, documentCreatorSettings));
     }
@@ -33,8 +33,8 @@ export default (settings) => {
         "input"
     ];
 
-    if (settings.generateCustomDocumentCreatorSettingsWhenIsEditing) {
-        documentCreator[PLUGIN_ARGS_REQUIREMENTS_KEYWORD].push("isEditing");
+    if (settings.addExtraPluginArgs) {
+        settings.addExtraPluginArgs(documentCreator);
     }
 
     return documentCreator;
