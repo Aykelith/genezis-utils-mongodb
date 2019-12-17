@@ -25,7 +25,7 @@ export default (settings) => {
 
         let documentCreatorExtraParameters = settings.createDocumentCreatorExtraParameters
                                                 ? settings.createDocumentCreatorExtraParameters(data) 
-                                                : {};
+                                                : [];
 
         Object.assign(data.doc, await DocumentChecker(data.input, settings.documentConfig, ...documentCreatorExtraParameters));
     }
