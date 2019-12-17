@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Version 0.2.917
+
+- resolved bug in `utils/generateDocumentCreatorPlugin.js` when no `createDocumentCreatorExtraParameters` was given
+
 ## Version 0.2.916
 
 - modified the parameters to `utils/generateDocumentCreatorPlugin.js` for better clarity
