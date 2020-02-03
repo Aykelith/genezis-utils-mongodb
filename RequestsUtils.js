@@ -650,6 +650,8 @@ export function createSingleDeleter(settings) {
 
     if (!settings.onError) settings.onError = (error) => { throw error; }
 
+    if (throwErrorOnNoDocumentDeleted == undefined) throwErrorOnNoDocumentDeleted = true;
+
     return createRequest(settings, async (req, data, onSuccess, sharedData) => {
         if (!data) throw new RequestError(400, await getMessage(settings.messageOnNoData));
 
@@ -682,7 +684,7 @@ export function createSingleDeleter(settings) {
         const itWorked = settings.afterDeletedRequiresDoc ? result.lastErrorObject.n == 1 : result.deletedCount == 1;
 
         if (!itWorked) {
-            if (settings.onNoDeletedDocument) await settings.onError(
+            if (settings.throwErrorOnNoDocumentDeleted) await settings.onError(
                 new GenezisGeneralError(Errors.DELETE_REQUEST__NO_DOCUMENT_DELETED),
                 req,
                 data,
