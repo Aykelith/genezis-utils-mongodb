@@ -650,7 +650,7 @@ export function createSingleDeleter(settings) {
 
     if (!settings.onError) settings.onError = (error) => { throw error; }
 
-    if (throwErrorOnNoDocumentDeleted == undefined) throwErrorOnNoDocumentDeleted = true;
+    if (settings.throwErrorOnNoDocumentDeleted == undefined) settings.throwErrorOnNoDocumentDeleted = true;
 
     return createRequest(settings, async (req, data, onSuccess, sharedData) => {
         if (!data) throw new RequestError(400, await getMessage(settings.messageOnNoData));
