@@ -59,7 +59,8 @@ export const Errors = {
     EDIT_REQUEST__NO_USER_MODIFIED_ENTRY: `${ErrorsBase}__edit_request__no_user_modified_entry`,
     EDIT_REQUEST__NO_USER_FIND_ENTRY: `${ErrorsBase}__edit_request__no_user_find_entry`,
     ADD_REQUEST__NO_USER_ADD_ENTRY: `${ErrorsBase}__add_request__no_user_add_entry`,
-    DELETE_REQUEST__NO_INPUT_FIELD_NAME: `${ErrorsBase}__delete_request__no_input_field_name`
+    DELETE_REQUEST__NO_INPUT_FIELD_NAME: `${ErrorsBase}__delete_request__no_input_field_name`,
+    DELETE_REQUEST__NO_DOCUMENT_DELETED: `${ErrorsBase}__delete_request__no_document_deleted`
 };
 
 const VariableTypes = {
@@ -678,7 +679,14 @@ export function createSingleDeleter(settings) {
             throw new RequestError(500, error.message, error);
         }
 
-        // TODO: Should I check if result.ok is good?
+        if (result.deletedCount != 1) {
+            if (settings.onNoDeletedDocument) await settings.onError(
+                new GenezisGeneralError(Errors.DELETE_REQUEST__NO_DOCUMENT_DELETED),
+                req,
+                data,
+                sharedData
+            )
+        }
 
         if (settings.afterDeleted) {
             await settings.afterDeleted(req, data, sharedData, result.value);
