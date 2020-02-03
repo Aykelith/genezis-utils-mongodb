@@ -679,7 +679,9 @@ export function createSingleDeleter(settings) {
             throw new RequestError(500, error.message, error);
         }
 
-        if (result.deletedCount != 1) {
+        const itWorked = settings.afterDeletedRequiresDoc ? result.lastErrorObject.n == 1 : result.deletedCount == 1;
+
+        if (!itWorked) {
             if (settings.onNoDeletedDocument) await settings.onError(
                 new GenezisGeneralError(Errors.DELETE_REQUEST__NO_DOCUMENT_DELETED),
                 req,
