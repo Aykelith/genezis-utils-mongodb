@@ -667,6 +667,8 @@ export function createSingleDeleter(settings) {
             }
         }
 
+        if (settings.beforeDeleting) await settings.beforeDeleting(req, data, sharedData);
+
         const collection = await getCollection(settings.collection, req, data, sharedData);
 
         let result;
