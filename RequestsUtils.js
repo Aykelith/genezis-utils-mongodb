@@ -676,7 +676,6 @@ export function createSingleDeleter(settings) {
 
         let result;
         try {
-            console.log(await settings.queryMaker(req, data, sharedData));
             result = await collection[settings.afterDeletedRequiresDoc ? "findOneAndDelete" : "deleteOne"](await settings.queryMaker(req, data, sharedData));
         } catch (error) {
             throw new RequestError(500, error.message, error);
