@@ -1,6 +1,6 @@
 import { createGenerateOptions, stringChecker, integerChecker, booleanChecker, requiredChecker, numberChecker } from "@genezis/genezis/Checker";
 import { ObjectID as MongoID, Int32 as MongoInt32, Long as MongoInt64 } from "mongodb";
-import CheckerError from "@genezis/genezis/CheckerError";
+import GenezisGeneralError from "@genezis/genezis/GenezisGeneralError";
 
 export const Errors = {
     NOT_UNIQUE: "genezis-utils-mongodb_documentchecker_not_unique"
@@ -89,7 +89,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                     if (resultDoc._id.equals(runtimeSettings[property].ignoreDocumentsWithIDs)) throw new CheckerError("", property, data);
                 }
             } else {
-                throw new CheckerError(Errors.NOT_UNIQUE, property, data);
+                throw new GenezisGeneralError(Errors.NOT_UNIQUE { property, data });
             }
         }
     }])),
