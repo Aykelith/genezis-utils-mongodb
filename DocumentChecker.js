@@ -76,7 +76,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
             if (document) document[field] = value;
         }
     }])),
-    unique: (settings) => generateOptions(previousChecks.concat([async (property, data, config, field, document, collection, runtimeSettings) => {
+    unique: (settings = {}) => generateOptions(previousChecks.concat([async (property, data, config, field, document, collection, runtimeSettings) => {
         if (runtimeSettings.__ignoreUnique) return;
 
         if (data === undefined) return;
@@ -89,7 +89,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                     if (resultDoc._id.equals(runtimeSettings[property].ignoreDocumentsWithIDs)) throw new CheckerError("", property, data);
                 }
             } else {
-                throw new GenezisGeneralError(Errors.NOT_UNIQUE, { property, data });
+                throw new GenezisGeneralError(settings.customErrorType || Errors.NOT_UNIQUE, { property, data });
             }
         }
     }])),
