@@ -89,7 +89,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                     if (resultDoc._id.equals(runtimeSettings[property].ignoreDocumentsWithIDs)) throw new CheckerError("", property, data);
                 }
             } else {
-                throw new GenezisGeneralError(Errors.NOT_UNIQUE { property, data });
+                throw new GenezisGeneralError(Errors.NOT_UNIQUE, { property, data });
             }
         }
     }])),
