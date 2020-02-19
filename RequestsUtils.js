@@ -445,7 +445,7 @@ export const SingleSetterConfig = {
  * @exports createSingleSetter
  * @genezis genezis-utils-router
  * 
- * @param {GenezisChecker}          settings The settings for the request
+ * @param {GenezisChecker}         settings The settings for the request
  * @param {MongoDBRequestFields[]} settings.updateBy The possible fields to find the document to edit. The order of them matters
  * @param {Booelean}               settings.acceptEmptyUserInput
  * @param {Object | Function}      settings.updateQuery

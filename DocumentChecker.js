@@ -82,13 +82,30 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
         if (data === undefined) return;
         if (!collection) throw new Error("No collection given");
         
-        let resultDoc = await collection.findOne({ [field]: data }, { $projection: { _id: 1 } });
+        let projection = {};
+
+        if (runtimeSettings[property].ignoreDocumentsWith) {
+            for (const key in runtimeSettings[property].ignoreDocumentsWith) {
+                projection[key] = 1;
+            }
+        } else {
+            projection = { _id: 1 };
+        }
+
+        let resultDoc = await collection.findOne({ [field]: data }, { $projection: projection });
         if (resultDoc) {
-            if (runtimeSettings[property] && runtimeSettings[property].ignoreDocumentsWithIDs) {
-                for (let i=0, length=runtimeSettings[property].ignoreDocumentsWithIDs.length; i < length; ++i) {
-                    if (resultDoc._id.equals(runtimeSettings[property].ignoreDocumentsWithIDs)) throw new CheckerError("", property, data);
+            let throwError = false;
+            if (runtimeSettings[property] && runtimeSettings[property].ignoreDocumentsWith) {
+                for (const key in runtimeSettings[property].ignoreDocumentsWith) {
+                    if (key == "_id") {
+                        if (!resultDoc._id.equals(runtimeSettings[property].ignoreDocumentsWith._id)) throwError = true;
+                    } else if (resultDoc[key] !== runtimeSettings[property].ignoreDocumentsWith[key]) throwError = true;
                 }
             } else {
+                throwError = true;
+            }
+
+            if (throwError) {
                 throw new GenezisGeneralError(settings.customErrorType || Errors.NOT_UNIQUE, { property, data });
             }
         }
