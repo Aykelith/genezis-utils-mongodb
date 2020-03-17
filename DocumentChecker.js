@@ -9,9 +9,9 @@ export const Errors = {
 let generateOptions = createGenerateOptions((generateOptions, previousChecks) => { return {
     id: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document) => {
         if (data === undefined) return;
-        if (!MongoID.isValid(data)) throw new CheckerError(`The property "${property}" with data "${data}" is not a valid MongoID`, property, data);
+        if (!MongoID.isValid(data)) throw new GenezisGeneralError(`The property "${property}" with data "${data}" is not a valid MongoID`, { property, data });
         if (!settings.convert && !(data instanceof MongoID)) {
-            throw new CheckerError("5", property, data);
+            throw new GenezisGeneralError("5", { property, data });
         }
 
         if (document) document[field] = MongoID(data);
@@ -24,9 +24,9 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
             if (settings.convert) {
                 let converted = Number.parseInt(data);
 
-                if (Number.isNaN(converted)) throw new CheckerError(`The property "${property}" with value "${data}" must be a number`, property, data);
+                if (Number.isNaN(converted)) throw new GenezisGeneralError(`The property "${property}" with value "${data}" must be a number`, { property, data });
             } else {
-                throw new CheckerError(`The property "${property}" with value "${data}" must be an integer`, property, data);
+                throw new GenezisGeneralError(`The property "${property}" with value "${data}" must be an integer`, { property, data });
             }
         }
 
@@ -40,9 +40,9 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
             if (settings.convert) {
                 let converted = Number.parseInt(data);
 
-                if (Number.isNaN(converted)) throw new CheckerError(`The property "${property}" with value "${data}" must be a number`, property, data);
+                if (Number.isNaN(converted)) throw new GenezisGeneralError(`The property "${property}" with value "${data}" must be a number`, { property, data });
             } else {
-                throw new CheckerError(`The property "${property}" with value "${data}" must be an integer`, property, data);
+                throw new GenezisGeneralError(`The property "${property}" with value "${data}" must be an integer`, { property, data });
             }
         }
 
@@ -58,10 +58,10 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                 if (settings.convert) {
                     let converted = Number.parseInt(data);
 
-                    if (Number.isNaN(converted)) throw new CheckerError(`The property "${property}" with value "${data}" must be a Date or a number`, property, data);
+                    if (Number.isNaN(converted)) throw new GenezisGeneralError(`The property "${property}" with value "${data}" must be a Date or a number`, { property, data });
                     data = new Date(converted);
                 } else {
-                    throw new CheckerError(`The property "${property}" with value "${data}" must be a Date or a number`, property, data);
+                    throw new GenezisGeneralError(`The property "${property}" with value "${data}" must be a Date or a number`, { property, data });
                 }
             }
 
@@ -73,7 +73,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
     float: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (config[property] !== undefined) {
             const value = numberChecker(settings)(property, data, config, runtimeSettings);
-            if (document) document[field] = value;
+            if (document) document[field] = settings.formatValue ? settings.formatValue(value) : value;
         }
     }])),
     unique: (settings = {}) => generateOptions(previousChecks.concat([async (property, data, config, field, document, collection, runtimeSettings) => {
@@ -113,12 +113,14 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
     string: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (config[property]) {
             const value = stringChecker(settings)(property, data, {}, runtimeSettings);
-            if (document) document[field] = value;
+            if (document) {
+                document[field] = settings.formatValue ? settings.formatValue(value) : value;
+            }
         }
     }])),
     object: (settings = {}) => generateOptions(previousChecks.concat([(property, value, config, field, document, collection, runtimeSettings) => {
         if (value === undefined) return;
-        if (typeof value !== "object" || Array.isArray(value)) throw new CheckerError(`The property "${property}" with value "${value}" must be an object`, property, value);
+        if (typeof value !== "object" || Array.isArray(value)) throw new GenezisGeneralError(`The property "${property}" with value "${value}" must be an object`, { property, value });
 
         if (settings.keysOf) {
             Object.keys(value).forEach(key => {
@@ -170,13 +172,13 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
     integer: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (config[property] !== undefined) {
             const value = integerChecker(settings)(property, data, config, runtimeSettings);
-            if (document != null) document[field] = value;
+            if (document != null) document[field] = settings.formatValue ? settings.formatValue(value) : value;
         }
     }])),
     boolean: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (config[property]) {
             const value = booleanChecker(settings)(property, data, config, runtimeSettings);
-            if (document != null) document[field] = value;
+            if (document != null) document[field] = settings.formatValue ? settings.formatValue(value) : value;
         }
     }])),
     default: (defaultValue) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
@@ -193,7 +195,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
     }])),
     array: (settings = {}) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (data === undefined) return;
-        if (!Array.isArray(data)) throw new CheckerError(`The property "${property}" with value "${data}" must be an array`, property, data);
+        if (!Array.isArray(data)) throw new GenezisGeneralError(`The property "${property}" with value "${data}" must be an array`, { property, data });
 
         if (settings.onCopies) {
             let arrayWithoutCopies = [];
@@ -203,12 +205,12 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
                     if (isUniqueFunc(child, arrayWithoutCopies)) arrayWithoutCopies.push(child);
                     else {
                         if (!settings.onCopies.delete) {
-                            throw new CheckerError("1", property, data);
+                            throw new GenezisGeneralError("1", { property, data });
                         }
                     }
                 });
             } else if (!settings.onCopies.checkAfter) {
-                throw new CheckerError("2", property, data);
+                throw new GenezisGeneralError("2", { property, data });
             }
 
             data = arrayWithoutCopies;
@@ -218,7 +220,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
             const isFromArrayFunc = settings.valuesIsFromArrayFunc || ((e, valuesFrom) => valuesFrom.includes(e)); 
             data.forEach((child, index) => {
                 if (!isFromArrayFunc(child, settings.valuesFrom)) {
-                    throw new CheckerError("3", `${property}[${index}]`, child);
+                    throw new GenezisGeneralError("3", { propery: `${property}[${index}]`, data: child });
                 }
             }); 
         }
@@ -234,7 +236,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
         }
 
         if (settings.fixedLength) {
-            if (document.length != settings.fixedLength) throw new CheckerError(`The property "${property}" has fixedLengh=${settings.fixedLength} but the size of array is ${document.length}`, property, data);
+            if (document.length != settings.fixedLength) throw new GenezisGeneralError(`The property "${property}" has fixedLengh=${settings.fixedLength} but the size of array is ${document.length}`, { property, data });
         }
     }]))
 };});
