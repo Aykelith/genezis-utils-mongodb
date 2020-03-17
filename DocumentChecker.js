@@ -84,7 +84,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
         
         let projection = {};
 
-        if (runtimeSettings[property].ignoreDocumentsWith) {
+        if (runtimeSettings[property] && runtimeSettings[property].ignoreDocumentsWith) {
             for (const key in runtimeSettings[property].ignoreDocumentsWith) {
                 projection[key] = 1;
             }
