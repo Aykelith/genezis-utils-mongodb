@@ -7,7 +7,7 @@ export const Errors = {
 };
 
 let generateOptions = createGenerateOptions((generateOptions, previousChecks) => { return {
-    id: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document) => {
+    id: (settings = {}) => generateOptions(previousChecks.concat([(property, data, config, field, document) => {
         if (data === undefined) return;
         if (!MongoID.isValid(data)) throw new GenezisGeneralError(`The property "${property}" with data "${data}" is not a valid MongoID`, { property, data });
         if (!settings.convert && !(data instanceof MongoID)) {
@@ -16,7 +16,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
 
         if (document) document[field] = MongoID(data);
     }])),
-    int32: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document) => {
+    int32: (settings = {}) => generateOptions(previousChecks.concat([(property, data, config, field, document) => {
         if (data === undefined) return;
         
         const isInteger = Number.isInteger(data);
@@ -32,7 +32,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
 
         if (document) document[field] = MongoInt32(data);
     }])),
-    int64: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document) => {
+    int64: (settings = {}) => generateOptions(previousChecks.concat([(property, data, config, field, document) => {
         if (data === undefined) return;
         
         const isInteger = Number.isInteger(data);
@@ -70,7 +70,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
 
         if (document) document[field] = data;
     }])),
-    float: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
+    float: (settings = {}) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (config[property] !== undefined) {
             const value = numberChecker(settings)(property, data, config, runtimeSettings);
             if (document) document[field] = settings.formatValue ? settings.formatValue(value) : value;
@@ -110,7 +110,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
             }
         }
     }])),
-    string: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
+    string: (settings = {}) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (config[property]) {
             const value = stringChecker(settings)(property, data, {}, runtimeSettings);
             if (document) {
@@ -169,13 +169,13 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
             document[field] = value;
         }
     }])),
-    integer: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
+    integer: (settings = {}) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (config[property] !== undefined) {
             const value = integerChecker(settings)(property, data, config, runtimeSettings);
             if (document != null) document[field] = settings.formatValue ? settings.formatValue(value) : value;
         }
     }])),
-    boolean: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
+    boolean: (settings = {}) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (config[property]) {
             const value = booleanChecker(settings)(property, data, config, runtimeSettings);
             if (document != null) document[field] = settings.formatValue ? settings.formatValue(value) : value;
@@ -188,7 +188,7 @@ let generateOptions = createGenerateOptions((generateOptions, previousChecks) =>
             document[field] = defaultValue;
         }
     }])),
-    required: (settings) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
+    required: (settings = {}) => generateOptions(previousChecks.concat([(property, data, config, field, document, collection, runtimeSettings) => {
         if (runtimeSettings.___ignoreRequired) return;
 
         requiredChecker(settings)(property, data, config, runtimeSettings);
