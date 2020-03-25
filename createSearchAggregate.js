@@ -109,6 +109,7 @@ function generateQuery(fieldName, data) {
         return { $lte: value };
     } else if (data.type == SearchType.RANGE) {
         let query = {};
+        
         if (data.value.$lte) {
             let value;
             if (data.valueType != null) {
@@ -119,6 +120,7 @@ function generateQuery(fieldName, data) {
 
             query.$lte = parseInt(value);
         }
+
         if (data.value.$gte) {
             let value;
             if (data.valueType != null) {
