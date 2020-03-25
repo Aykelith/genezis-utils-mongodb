@@ -28,6 +28,9 @@ function convertSearchType(type, value) {
         case ValueType.STRING:
             return value.toString();
 
+        case ValueType.DATE:
+            return new Date(value);
+
         default:
             throw new GenezisGeneralError(`Not found the type "${type}"`);
     }
@@ -87,13 +90,45 @@ function generateQuery(fieldName, data) {
     }
     
     if (data.type == SearchType.BIGGER_THAN) {
-        return { $gte: parseInt(data.value) };
+        let value;
+        if (data.valueType != null) {
+            value = convertSearchType(data.valueType, data.value);
+        } else {
+            value = parseInt(data.value);
+        }
+
+        return { $gte: value };
     } else if (data.type == SearchType.SMALLER_THAN) {
-        return { $lte: parseInt(data.value) };
+        let value;
+        if (data.valueType != null) {
+            value = convertSearchType(data.valueType, data.value);
+        } else {
+            value = parseInt(data.value);
+        }
+
+        return { $lte: value };
     } else if (data.type == SearchType.RANGE) {
         let query = {};
-        if (data.value.$lte) query.$lte = parseInt(data.value.$lte);
-        if (data.value.$gte) query.$gte = parseInt(data.value.$gte);
+        if (data.value.$lte) {
+            let value;
+            if (data.valueType != null) {
+                value = convertSearchType(data.valueType, data.value.$lte);
+            } else {
+                value = parseInt(data.value.$lte);
+            }
+
+            query.$lte = parseInt(value);
+        }
+        if (data.value.$gte) {
+            let value;
+            if (data.valueType != null) {
+                value = convertSearchType(data.valueType, data.value.$gte);
+            } else {
+                value = parseInt(data.value.$gte);
+            }
+            
+            query.$gte = parseInt(value);
+        }
 
         return query;
     } else if (!data.type) {
