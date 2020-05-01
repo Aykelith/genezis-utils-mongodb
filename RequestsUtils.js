@@ -259,7 +259,8 @@ export const SingleGetterConfig = {
     customOnSuccess: GenezisChecker.function(),
     findQueryMiddleware: GenezisChecker.function(),
     customFindQueryMaker: GenezisChecker.function(),
-    customFindOneSettings: GenezisChecker.function()
+    customFindOneSettings: GenezisChecker.function(),
+    checksBeforeGettingDoc: GenezisChecker.function()
 };
 
 /**
@@ -348,6 +349,10 @@ export function createSingleGetter(settings) {
                     throw new Error("The function \"findQueryMiddleware\" should return the search object");
                 }
             }
+        }
+
+        if (settings.checksBeforeGettingDoc) {
+            await settings.checksBeforeGettingDoc(req, data, sharedData, findOneQuery, findOneSettings);
         }
         
         const collection = await getCollection(settings.collection, req, data, sharedData);
