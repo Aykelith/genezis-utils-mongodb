@@ -5,5 +5,6 @@ export default {
     IN_MONGOIDS: "in",
     IN_NUMBERS: "in2",
     IN_STRINGS: "in3",
-    REGEX: "s"
+    REGEX: "s",
+    EXISTS: "e"
 };

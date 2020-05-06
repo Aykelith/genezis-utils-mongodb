@@ -166,6 +166,13 @@ function generateQuery(fieldName, data) {
         if (data.options) obj.$options = data.options;
 
         return obj;
+    } else if (data.type == SearchType.EXISTS) {
+        return { 
+            $exists: 
+                (typeof(data.value) == typeof(true) && data.value) || 
+                (Number.isInteger(data.value) && data.value == 1) || 
+                (data.value == "true") 
+        };
     }
 
     throw new GenezisGeneralError("Type is invalid", { type: data.type });
