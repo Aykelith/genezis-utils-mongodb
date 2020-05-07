@@ -212,8 +212,6 @@ export default (queryData, preAggregateData = {}) => {
         searchObject[1].$sort = { [field]: parseInt(queryData.sort[field]) };
     }
 
-    if (queryData.onlyPublish) searchObject[0]["$match"]["promotions.own.normal"] = true; // <= TODO: Delete it
-
     if (preAggregateData.$project) searchObject.push({ $project: preAggregateData.$project });
     
     // Fields to get
@@ -264,7 +262,7 @@ export default (queryData, preAggregateData = {}) => {
     }
 
     if (queryData.onlyCount) {
-        searchObject[2] = { $count: "number" };
+        searchObject.push({ $count: "number" });
     }
 
     return searchObject;
