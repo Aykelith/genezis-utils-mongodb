@@ -421,6 +421,10 @@ export function createMultipleGetter(settings) {
                 if (onEmptyResponseStopAfter) return;
             }
 
+            if (settings.afterGetting) {
+                await settings.afterGetting(req, data, sharedData, docs);
+            }
+
             await onSuccess(data.onlyCount ? (docs[0] ? docs[0].number : 0) : docs);
         } catch (error) {
             if (error instanceof RequestError) throw error;
