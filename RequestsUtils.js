@@ -598,6 +598,8 @@ export function createSingleAdder(settings) {
 
         checkIfUniqueCall();
 
+        if (data.request_onlyCheck) return await onSuccess({});
+
         let result;
         try {
             result = await collection.insertOne(doc);
