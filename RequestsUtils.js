@@ -474,7 +474,7 @@ export function createSingleSetter(settings) {
 
     if (!settings.onError) settings.onError = (error) => { throw error; }
 
-    return createRequest(settings, async (req, data, onSuccess, sharedData) => {
+    return createRequest(settings, async (req, data, onSuccess, sharedData, _1, checkIfUniqueCall) => {
         if (!data[settings.modifiedFieldName]) await settings.onError(
             new GenezisGeneralError(Errors.EDIT_REQUEST__NO_USER_MODIFIED_ENTRY, settings.modifiedFieldName),
             req,
@@ -507,6 +507,7 @@ export function createSingleSetter(settings) {
         }
 
         let docData;
+		
         try {
             docData = await settings.checker(req, data[settings.modifiedFieldName], data, sharedData);
         } catch (error) {
@@ -519,6 +520,8 @@ export function createSingleSetter(settings) {
         }
 
         const collection = await getCollection(settings.collection, req, data, sharedData);
+
+        checkIfUniqueCall();
 
         let result;
         try {
@@ -572,7 +575,7 @@ export function createSingleAdder(settings) {
 
     if (!settings.onError) settings.onError = (error) => { throw error; }
 
-    return createRequest(settings, async (req, data, onSuccess, sharedData) => {
+    return createRequest(settings, async (req, data, onSuccess, sharedData, _1, checkIfUniqueCall) => {
         if (!data) await settings.onError(
             new GenezisGeneralError(Errors.ADD_REQUEST__NO_USER_ADD_ENTRY),
             req,
@@ -592,6 +595,8 @@ export function createSingleAdder(settings) {
         }
 
         const collection = await getCollection(settings.collection, req, data, sharedData);
+
+        checkIfUniqueCall();
 
         let result;
         try {
